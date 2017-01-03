@@ -103,7 +103,6 @@ slab_besides_return() {
     for (int i = 0; i < SLAB_BIN_COUNT; i ++) {
       bool dummy, read_add_8_slab_return_table_size;
       dummy = read_channel_nb_altera(add_8_slab_return_table_size[i], &read_add_8_slab_return_table_size);
-      assert(dummy);
       if (read_add_8_slab_return_table_size) {
 	slab_return_table_size[i] += 8;
       }

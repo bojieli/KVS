@@ -19,7 +19,7 @@ hashtable_get_res_merger() {
     }
 
     if (!is_valid_get_offline_res) {
-      show_ahead_get_offline_res = read_channel_nb_altera(get_offline_res, &is_valid_get_offline_res);      
+      show_ahead_get_offline_res = read_channel_nb_altera(get_offline_res, &is_valid_get_offline_res);
     }
     
     if (!has_inflight_res) {
@@ -58,7 +58,6 @@ hashtable_get_res_merger() {
     }
     
     if (should_write_get_res) {
-      //      cout << "in" << endl;
       write_channel_altera(output_get_res, val_write_get_res);
     }
   }

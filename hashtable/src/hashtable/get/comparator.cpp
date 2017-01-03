@@ -58,13 +58,12 @@ hashtable_get_comparator() {
       uchar offline_found_slab_type;
       ulong offline_found_val_addr;
       // do offline comparasion
-      
+
 #pragma unroll
       for (int i = 0; i < 10; i ++) {
 	if (line_5B_metadata[i] == 31) { // 5'b11111
 	  ushort line_hash2 = (((ushort)line_in_uchar[5 * i]) << 2) | (((ushort)line_in_uchar[5 * i + 1]) >> 6);
 	  if (line_hash2 == req.hash2) {
-	    
 	    offline_found = true;
 	    offline_found_val_addr =
 	      (((ulong)(((uchar)(line_in_uchar[5 * i + 1] << 2)) >> 2)) << 24) |
@@ -253,9 +252,13 @@ hashtable_get_comparator() {
 	DMA_ReadReq rd_req;
 	rd_req.req.address = offline_found_val_addr + slab_start_addr;
 	rd_req.req.size = 1 << (offline_found_slab_type + 5);
+	GetOfflineType getOfflineType;
+	getOfflineType.size = rd_req.req.size;
+	getOfflineType.net_meta = req.net_meta;
 	bool dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_req, rd_req.raw);
-	dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res_size, (ushort)rd_req.req.size);
-	dummy = write_channel_nb_altera(hashtable_put_offline_value_handler_net_metadata, req.net_meta);
+	assert(dummy);
+	dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res_size_with_net_meta, getOfflineType);
+	assert(dummy);
       }
       else {
 	if ((line_in_uchar[63] & 1) == 1) {

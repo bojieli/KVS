@@ -90,12 +90,10 @@ decl_channel(ulong8, 256, line_fetcher_get_dma_rd_res);
 decl_channel(GetRes, 256, get_inline_res);
 // hashtable/get/offline_value_handler -> hashtable/get/res_merger
 decl_channel(GetRes, 256, get_offline_res);
-// hashtable/get/comparator -> hashtable/get/offline_value_handler
-decl_channel(uchar, 256, hashtable_put_offline_value_handler_net_metadata);
 // hashtable/get/comparator -> dma/rd_manager
 decl_channel(ulong8, 128, slab_fetcher_get_offline_dma_rd_req);
 // hashtable/get/comparator -> hashtable/get/offline_value_handler
-decl_channel(ushort, 128, slab_fetcher_get_offline_dma_rd_res_size);
+decl_channel(GetOfflineType, 128, slab_fetcher_get_offline_dma_rd_res_size_with_net_meta);
 // dma/rd_manager -> hashtable/get/offline_value_handler
 decl_channel(ulong4, 256, slab_fetcher_get_offline_dma_rd_res);
 // slab/besides_return -> hashtable/get/comparator

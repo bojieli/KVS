@@ -43,10 +43,11 @@ hashtable_get_offline_value_handler() {
       bool first_res = false;
       if (!inflight_rd_res_size) {
 	bool dummy;
-	inflight_rd_res_size = read_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res_size, &dummy);
+	GetOfflineType getOfflineType;
+	getOfflineType = read_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res_size_with_net_meta, &dummy);
 	assert(dummy);
-	net_meta = read_channel_nb_altera(hashtable_put_offline_value_handler_net_metadata, &dummy);
-	assert(dummy);
+	inflight_rd_res_size = getOfflineType.size;
+	net_meta = getOfflineType.net_meta;
 	first_res = true;
       }
 
@@ -64,7 +65,7 @@ hashtable_get_offline_value_handler() {
 	// extract metadata in first packet
 	// 2B = 5b(key_size) + 11b(val_size)
 	key_size = data_in_uchar[0] >> 3;
-	val_size = ((((ushort)data_in_uchar[0] & 7)) << 8) | (data_in_uchar[1]);
+	val_size_left = val_size = ((((ushort)data_in_uchar[0] & 7)) << 8) | (data_in_uchar[1]);
 
 	// can get the whole key within first packet, key_size <= 30
 

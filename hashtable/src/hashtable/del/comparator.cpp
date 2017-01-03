@@ -9,10 +9,6 @@ hashtable_del_comparator() {
     bool read_line;
     line = read_channel_nb_altera(line_fetcher_del_dma_rd_res, &read_line);
     if (read_line) {
-      // static int cnt = 0;
-      // cnt ++;
-      // cout << cnt << endl;
-      
       bool should_write_output_del_res = false;
       DelRes val_write_output_del_res;
       bool should_write_hashtable_del_dma_wr_req = false;
@@ -53,7 +49,8 @@ hashtable_del_comparator() {
       bool offline_found = false;
       uchar offline_found_idx;
       uchar offline_found_slab_type;
-      ulong offline_found_val_addr; 
+      ulong offline_found_val_addr;
+      
       // do offline comparasion
 #pragma unroll
       for (int i = 0; i < 10; i ++) {
@@ -119,7 +116,7 @@ hashtable_del_comparator() {
 	  is_true[13] = (((uchar)(line_5B_metadata[i + 2] << 3)) >> 4) & 1;
 	  is_true[14] = (((uchar)(line_5B_metadata[i + 2] << 4)) >> 4) & 1;
 
- 	  if (is_true[0] && is_true[1]) {
+ 	  if (is_true[0] && is_true[1]) {	    
 	    inline_found_slots[i] = true;
 #pragma unroll
 	    for (int j = 0; j < 12; j ++) {
@@ -159,12 +156,6 @@ hashtable_del_comparator() {
 		    line_key_in_uchar[j] = 0;
 		  }
 		}
-
-		// if (cnt == 2 && i == 2) {
-		//   for (int j = 0; j < 12; j ++) {
-		//     cout << dec << j << " " << (int)line_key_in_uchar[j] << " " << (int)line_in_uchar[j] << endl;
-		//   }
-		// }
 		
 #pragma unroll
 		for (int j = 0; j < 12; j ++) {
@@ -173,7 +164,7 @@ hashtable_del_comparator() {
 		  }
 		}
 
-		if (inline_found_slots[i]) {		  
+		if (inline_found_slots[i]) {
 		  inline_found_idx_slots[i] = i;
 		  ushort val_start_idx = req.key_size;
 		  ushort val_end_idx;
@@ -401,14 +392,14 @@ hashtable_del_comparator() {
 #pragma unroll
 	for (int i = 0; i < 4; i ++) {
 	  wr_data_in_ulong[i] =
-	    (((ulong)data_to_write[0]) << 56) |
-	    (((ulong)data_to_write[1]) << 48) |
-	    (((ulong)data_to_write[2]) << 40) |
-	    (((ulong)data_to_write[3]) << 32) |
-	    (((ulong)data_to_write[4]) << 24) |
-	    (((ulong)data_to_write[5]) << 16) |
-	    (((ulong)data_to_write[6]) << 8) |
-	    (((ulong)data_to_write[6]) << 0);
+	    (((ulong)data_to_write[0 + (i << 3)]) << 56) |
+	    (((ulong)data_to_write[1 + (i << 3)]) << 48) |
+	    (((ulong)data_to_write[2 + (i << 3)]) << 40) |
+	    (((ulong)data_to_write[3 + (i << 3)]) << 32) |
+	    (((ulong)data_to_write[4 + (i << 3)]) << 24) |
+	    (((ulong)data_to_write[5 + (i << 3)]) << 16) |
+	    (((ulong)data_to_write[6 + (i << 3)]) << 8) |
+	    (((ulong)data_to_write[7 + (i << 3)]) << 0);
 	}
 	DMA_WriteReq wr_req;
 	wr_req.req.data.x = wr_data_in_ulong[0];
@@ -445,7 +436,6 @@ hashtable_del_comparator() {
 	  bool dummy = write_channel_nb_altera(slab_return_req_line, signal.raw);
 	  req.last_half_line_data.w = ((req.last_half_line_data.w >> 32) << 32) | (wr_data_in_ulong[3] & 0xFFFFFFFF);
 	  DMA_WriteReq wr_req;
-	  // FIXME: line can actually be a slab
 	  if (!req.last_has_last) {
 	    wr_req.req.address = (req.last_line_addr << 6) + line_start_addr + 32;
 	  }
@@ -503,10 +493,12 @@ hashtable_del_comparator() {
 
       if (should_write_output_del_res) {
 	bool dummy = write_channel_nb_altera(output_del_res, val_write_output_del_res);
+	assert(dummy);
       }
 
       if (should_write_hashtable_del_dma_wr_req) {
 	bool dummy = write_channel_nb_altera(hashtable_del_dma_wr_req_1, val_write_hashtable_del_dma_wr_req);
+	assert(dummy);
       }
     }      
   }

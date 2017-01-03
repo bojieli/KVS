@@ -40,14 +40,14 @@ hashtable_put_offline_handler() {
 	uchar line_in_uchar[64];
 #pragma unroll	
 	for (int i = 0; i < 8; i ++) {
-	  line_in_uchar[i] = ((ulong)((show_ahead_put_offline_handler.line.hi.x) << (i << 3))) >> 56;
-	  line_in_uchar[i + 8] = ((ulong)((show_ahead_put_offline_handler.line.hi.y) << (i << 3))) >> 56;
-	  line_in_uchar[i + 16] = ((ulong)((show_ahead_put_offline_handler.line.hi.z) << (i << 3))) >> 56;
-	  line_in_uchar[i + 24] = ((ulong)((show_ahead_put_offline_handler.line.hi.w) << (i << 3))) >> 56;
-	  line_in_uchar[i + 32] = ((ulong)((show_ahead_put_offline_handler.line.lo.x) << (i << 3))) >> 56;
-	  line_in_uchar[i + 40] = ((ulong)((show_ahead_put_offline_handler.line.lo.y) << (i << 3))) >> 56;
-	  line_in_uchar[i + 48] = ((ulong)((show_ahead_put_offline_handler.line.lo.z) << (i << 3))) >> 56;
-	  line_in_uchar[i + 56] = ((ulong)((show_ahead_put_offline_handler.line.lo.w) << (i << 3))) >> 56;
+	  line_in_uchar[i] = ((ulong)((show_ahead_put_offline_handler.line.lo.x) << (i << 3))) >> 56;
+	  line_in_uchar[i + 8] = ((ulong)((show_ahead_put_offline_handler.line.lo.y) << (i << 3))) >> 56;
+	  line_in_uchar[i + 16] = ((ulong)((show_ahead_put_offline_handler.line.lo.z) << (i << 3))) >> 56;
+	  line_in_uchar[i + 24] = ((ulong)((show_ahead_put_offline_handler.line.lo.w) << (i << 3))) >> 56;
+	  line_in_uchar[i + 32] = ((ulong)((show_ahead_put_offline_handler.line.hi.x) << (i << 3))) >> 56;
+	  line_in_uchar[i + 40] = ((ulong)((show_ahead_put_offline_handler.line.hi.y) << (i << 3))) >> 56;
+	  line_in_uchar[i + 48] = ((ulong)((show_ahead_put_offline_handler.line.hi.z) << (i << 3))) >> 56;
+	  line_in_uchar[i + 56] = ((ulong)((show_ahead_put_offline_handler.line.hi.w) << (i << 3))) >> 56;
 	}	
 
 	uchar put_idx = show_ahead_put_offline_handler.put_idx;
@@ -107,7 +107,7 @@ hashtable_put_offline_handler() {
 	    line_in_1bit[i + 40 * (9)] = hash2addr_in_1bit[i] & 1;	    
 	  }
 	}	
-
+	
 	// modify metadata
 #pragma unroll
 	for (int i = 0; i < 5; i ++) {
@@ -457,13 +457,6 @@ hashtable_put_offline_handler() {
 	wr_req.req.data.y = data_in_ulong[1];
 	wr_req.req.data.z = data_in_ulong[2];
 	wr_req.req.data.w = data_in_ulong[3];
-
-	// cout << "***************************" << endl;
-	// cout << hex << data_in_ulong[0] << endl;
-	// cout << hex << data_in_ulong[1] << endl;
-	// cout << hex << data_in_ulong[2] << endl;
-	// cout << hex << data_in_ulong[3] << endl;
-	// cout << "***************************" << endl;
 	
 	val_hashtable_put_offline_update_slab_dma_wr_req.x = wr_req.raw;
 	should_write_hashtable_put_offline_update_slab_dma_wr_req = true;
@@ -504,14 +497,7 @@ hashtable_put_offline_handler() {
 	  wr_req.req.data.y = data_in_ulong[1];
 	  wr_req.req.data.z = data_in_ulong[2];
 	  wr_req.req.data.w = data_in_ulong[3];
-	  
-	  // cout << "***************************" << endl;
-	  // cout << hex << data_in_ulong[0] << endl;
-	  // cout << hex << data_in_ulong[1] << endl;
-	  // cout << hex << data_in_ulong[2] << endl;
-	  // cout << hex << data_in_ulong[3] << endl;
-	  // cout << "***************************" << endl;
-	  
+	  	  
 	  val_hashtable_put_offline_update_slab_dma_wr_req.y = wr_req.raw;
 	  val_hashtable_put_offline_update_slab_dma_wr_req.valid2 = true;
 	}
@@ -547,22 +533,6 @@ hashtable_put_offline_handler() {
     if (should_write_hashtable_put_offline_update_slab_dma_wr_req) {
       dummy = write_channel_nb_altera(hashtable_put_offline_update_slab_dma_wr_req_double,
 				      val_hashtable_put_offline_update_slab_dma_wr_req);
-      // DMA_WriteReq req;
-      // req.raw = val_hashtable_put_offline_update_slab_dma_wr_req.x;
-      // cout << "***************" << endl;
-      // cout << hex << req.req.data.x << endl;
-      // cout << hex << req.req.data.y << endl;
-      // cout << hex << req.req.data.z << endl;
-      // cout << hex << req.req.data.w << endl;
-
-      // if (val_hashtable_put_offline_update_slab_dma_wr_req.valid2) {
-      // 	req.raw = val_hashtable_put_offline_update_slab_dma_wr_req.y;
-      // 	cout << "***************" << endl;
-      // 	cout << hex << req.req.data.x << endl;
-      // 	cout << hex << req.req.data.y << endl;
-      // 	cout << hex << req.req.data.z << endl;
-      // 	cout << hex << req.req.data.w << endl;	
-      // }
     }
 
     if (should_write_put_offline_res) {

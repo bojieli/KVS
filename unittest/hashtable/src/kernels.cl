@@ -88,96 +88,6 @@
 
 using namespace std;
 
-void host_dma_simulator() {
-  int cnt = 0;
-  
-  while (1) {
-    bool read_dma_rd_req, read_dma_wr_req;
-    DMA_ReadReq rd_req;
-    DMA_WriteReq wr_req;
-    // read simulator
-    rd_req.raw = read_channel_nb_altera(dma_rd_req, &read_dma_rd_req);
-    if (read_dma_rd_req) {
-      assert(rd_req.req.size % 32 == 0);
-      ulong *mem_in_ulong = (ulong *)rd_req.req.address;
-      ulong4 data;
-      data.x = data.y = data.z = data.w = 0;
-      int cnt = 0;
-      while (rd_req.req.size) {
-	switch (cnt) {
-	case 0:
-	  data.x = *mem_in_ulong;
-	  break;
-	case 1:
-	  data.y = *mem_in_ulong;
-	  break;
-	case 2:
-	  data.z = *mem_in_ulong;
-	  break;
-	case 3:
-	  data.w = *mem_in_ulong;
-	  break;
-	default:
-	  break;	 
-	}
-	mem_in_ulong ++;
-	cnt = (cnt + 1) % 4;
-	rd_req.req.size -= 8;
-	if (cnt == 0) {
-	  DMA_ReadRes rd_res;
-	  rd_res.res.size = 32;
-	  rd_res.res.data = data;
-	  write_channel_altera(dma_rd_res, rd_res.raw);
-	  data.x = data.y = data.z = data.w = 0;
-	}
-      }
-      if (cnt != 0) {
-	DMA_ReadRes rd_res;
-	rd_res.res.size = (cnt << 3);
-	rd_res.res.data = data;
-	write_channel_altera(dma_rd_res, rd_res.raw);
-      }
-    }
-	
-    // write simulator
-    wr_req.raw = read_channel_nb_altera(dma_wr_req, &read_dma_wr_req);
-    if (read_dma_wr_req) {
-      assert(wr_req.req.size % 8 == 0);
-      uint size = wr_req.req.size;
-      ulong *mem_in_ulong = (ulong *)wr_req.req.address;
-      
-      int cnt = 0;
-      while (size) {
-	while (size && cnt <= 3) {
-	  switch (cnt) {
-	  case 0:
-	    *mem_in_ulong = wr_req.req.data.x;
-	    break;
-	  case 1:
-	    *mem_in_ulong = wr_req.req.data.y;
-	    break;
-	  case 2:
-	    *mem_in_ulong = wr_req.req.data.z;
-	    break;
-	  case 3:
-	    *mem_in_ulong = wr_req.req.data.w;
-	    break;
-	  default:
-	    break;
-	  }
-	  cnt ++;
-	  mem_in_ulong ++;
-	  size -= 8;
-	}
-	if (size) {
-	  wr_req.raw = read_channel_altera(dma_wr_req);
-	  cnt = 0 ;
-	}
-      }
-    }
-  }
-}
-
 ulong host_slab_available_table_base_addr[SLAB_BIN_COUNT];
 ulong host_slab_return_table_base_addr[SLAB_BIN_COUNT];
 uint* host_slab_available_table;
@@ -246,6 +156,103 @@ host_init() {
       = (((current_addr - slab_start_addr) >> 5) << 2) | 0 ;
     current_addr += 512;
     host_slab_available_tail_ptr[SLAB_BIN_COUNT - 1] ++;
+  }
+}
+
+void host_dma_simulator() {
+  int cnt = 0;
+  ulong start_addr = (ulong)host_slab_available_table;
+  ulong end_addr = start_addr + 1024ULL * 1024 * 1024 * 64;
+  
+  while (1) {
+    bool read_dma_rd_req, read_dma_wr_req;
+    DMA_ReadReq rd_req;
+    DMA_WriteReq wr_req;
+
+    // write simulator
+    wr_req.raw = read_channel_nb_altera(dma_wr_req, &read_dma_wr_req);
+    if (read_dma_wr_req) {
+      assert(wr_req.req.size % 8 == 0);
+      uint size = wr_req.req.size;
+      assert(wr_req.req.address >= start_addr);
+      assert(wr_req.req.address < end_addr);
+      ulong *mem_in_ulong = (ulong *)wr_req.req.address;
+      int cnt = 0;
+
+      while (size) {
+	while (size && cnt <= 3) {
+	  switch (cnt) {
+	  case 0:
+	    *mem_in_ulong = wr_req.req.data.x;
+	    break;
+	  case 1:
+	    *mem_in_ulong = wr_req.req.data.y;
+	    break;
+	  case 2:
+	    *mem_in_ulong = wr_req.req.data.z;	      
+	    break;
+	  case 3:
+	    *mem_in_ulong = wr_req.req.data.w;
+	    break;
+	  default:
+	    break;
+	  }
+	  cnt ++;
+	  mem_in_ulong ++;
+	  size -= 8;
+	}
+	if (size) {
+	  wr_req.raw = read_channel_altera(dma_wr_req);
+	  cnt = 0 ;
+	}
+      }
+    }
+    
+    // read simulator
+    rd_req.raw = read_channel_nb_altera(dma_rd_req, &read_dma_rd_req);
+    if (read_dma_rd_req) {
+      assert(rd_req.req.size % 32 == 0);
+      assert(rd_req.req.address >= start_addr);
+      assert(rd_req.req.address < end_addr);
+      ulong *mem_in_ulong = (ulong *)rd_req.req.address;
+      ulong4 data;
+      data.x = data.y = data.z = data.w = 0;
+      int cnt = 0;
+      while (rd_req.req.size) {
+	switch (cnt) {
+	case 0:
+	  data.x = *mem_in_ulong;
+	  break;
+	case 1:
+	  data.y = *mem_in_ulong;
+	  break;
+	case 2:
+	  data.z = *mem_in_ulong;
+	  break;
+	case 3:
+	  data.w = *mem_in_ulong;
+	  break;
+	default:
+	  break;	 
+	}
+	mem_in_ulong ++;
+	cnt = (cnt + 1) % 4;
+	rd_req.req.size -= 8;
+	if (cnt == 0) {
+	  DMA_ReadRes rd_res;
+	  rd_res.res.size = 32;
+	  rd_res.res.data = data;
+	  write_channel_altera(dma_rd_res, rd_res.raw);
+	  data.x = data.y = data.z = data.w = 0;
+	}
+      }
+      if (cnt != 0) {
+	DMA_ReadRes rd_res;
+	rd_res.res.size = (cnt << 3);
+	rd_res.res.data = data;
+	write_channel_altera(dma_rd_res, rd_res.raw);
+      }
+    }	
   }
 }
 
@@ -414,6 +421,8 @@ void test() {
   GetRes get_res;
   DelReq del_req;
   DelRes del_res;
+  uint hash1bak;
+
   // offline put
   put_req.key_size = 28;
   put_req.key.x = 0x7582754283871485;
@@ -450,7 +459,6 @@ void test() {
   assert(put_res.key.z == 0x4232689301837463);
   assert(put_res.key.w == 0x7164523400000000);
 
-  usleep(1000);  
   //  offline get
   get_req.key_size = 28;  
   get_req.key.x = 0x7582754283871485;
@@ -507,7 +515,6 @@ void test() {
   assert(del_res.key.z == 0x4232689301837463);
   assert(del_res.key.w == 0x7164523400000000);
 
-  usleep(1000);
   // offline get, to check whether delete works
   write_channel_altera(input_get_req, get_req);
   get_res = read_channel_altera(output_get_res);
@@ -542,7 +549,6 @@ void test() {
   assert(put_res.key.z == 0);
   assert(put_res.key.w == 0);
   
-  usleep(1000);
   // inline get, 3 slots
   get_req.key_size = 9;  
   get_req.key.x = 0x5859209385919439;
@@ -614,14 +620,13 @@ void test() {
   assert(get_res.val.z == 0);
   assert(get_res.val.w == 0);
 
-  //**********CUT HERE************
-  
+  //**********CUT HERE************  
   put_req.key_size = 6;
   put_req.key.x = 0x8585482838410000;
   put_req.key.y = 0;
   put_req.key.z = 0;
   put_req.key.w = 0;
-  uint hash1bak = put_req.hash1 = hash_func2(put_req.key, 0);
+  hash1bak = put_req.hash1 = hash_func2(put_req.key, 0);
   put_req.hash2 = hash_func2(put_req.key, 0);
   put_req.val_size = 4;
   put_req.val.x = 0x9897274100000000;
@@ -644,6 +649,7 @@ void test() {
   put_req.key.y = 0;
   put_req.key.z = 0;
   put_req.key.w = 0;
+
   put_req.hash1 = hash1bak;
   put_req.hash2 = hash_func2(put_req.key, 0);
   put_req.val_size = 4;
@@ -754,7 +760,6 @@ void test() {
   assert(put_res.key.z == 0);
   assert(put_res.key.w == 0);
 
-  usleep(1000);
   get_req.key_size = 6;
   get_req.key.x = 0x8585482838410000;
   get_req.key.y = 0;
@@ -863,8 +868,6 @@ void test() {
   assert(get_res.key.z == 0);
   assert(get_res.key.w == 0);
 
-  usleep(1000);
-  
   del_req.key_size = 6;
   del_req.key.x = 0x8585482838460000;
   del_req.key.y = 0;
@@ -972,6 +975,697 @@ void test() {
   assert(del_res.key.y == 0);
   assert(del_res.key.z == 0);
   assert(del_res.key.w == 0); 
+
+  //**********CUT HERE************
+  // offline put 1
+  put_req.key_size = 7;
+  put_req.key.x = 0x4385858283747500;
+  put_req.key.y = 0;
+  put_req.key.z = 0;
+  put_req.key.w = 0;
+  hash1bak = put_req.hash1 = hash_func1(put_req.key, 0);
+  put_req.hash2 = hash_func2(put_req.key, 0);
+  put_req.has_last = 0;
+  
+  put_req.val_size = 119;
+  put_req.val.x = 0x1336997846177294;
+  put_req.val.y = 0x8494250980676297;
+  put_req.val.z = 0x7569437011715753;
+  put_req.val.w = 0x1405124922887074;
+  write_channel_altera(input_put_req, put_req);
+    
+  put_req.val.x = 0x5331911029178831;
+  put_req.val.y = 0x3366728946916863;
+  put_req.val.z = 0x2163485697675180;
+  put_req.val.w = 0x6673854235623477;
+  write_channel_altera(input_put_req, put_req);	
+    
+  put_req.val.x = 0x5400268356029035;
+  put_req.val.y = 0x8206940498632420;
+  put_req.val.z = 0x8322125697889367;
+  put_req.val.w = 0x7658353241787005;
+  write_channel_altera(input_put_req, put_req);
+    
+  put_req.val.x = 0x5296564632648217;
+  put_req.val.y = 0x1664498026808973;
+  put_req.val.z = 0x3710556193597700;
+  put_req.val.w = 0;
+  write_channel_altera(input_put_req, put_req);
+
+  put_res = read_channel_altera(output_put_res);
+  assert(put_res.found);
+  assert(put_res.key.x == 0x4385858283747500);
+  assert(put_res.key.y == 0);
+  assert(put_res.key.z == 0);
+  assert(put_res.key.w == 0);
+
+  // offline put 2
+  put_req.key_size = 7;
+  put_req.key.x = 0x9217959687663200;
+  put_req.key.y = 0;
+  put_req.key.z = 0;
+  put_req.key.w = 0;
+  put_req.hash1 = hash1bak;
+  put_req.hash2 = hash_func2(put_req.key, 0);
+  put_req.has_last = 0;                
+  
+  put_req.val_size = 119;
+  put_req.val.x = 0x1581158239075577;
+  put_req.val.y = 0x3353736959745736;
+  put_req.val.z = 0x4175859162917692;
+  put_req.val.w = 0x9686145844313678;
+  write_channel_altera(input_put_req, put_req);
+    
+  put_req.val.x = 0x9458159078367406;
+  put_req.val.y = 0x2854302975003903;
+  put_req.val.z = 0x5636328234808881;
+  put_req.val.w = 0x9372493373502657;
+  write_channel_altera(input_put_req, put_req);	
+    
+  put_req.val.x = 0x4859363603803632;
+  put_req.val.y = 0x0066299946184778;
+  put_req.val.z = 0x7590326356593133;
+  put_req.val.w = 0x3095106660619416;
+  write_channel_altera(input_put_req, put_req);
+    
+  put_req.val.x = 0x1374759324457701;
+  put_req.val.y = 0x9161159955261622;
+  put_req.val.z = 0x9166751927697600;
+  put_req.val.w = 0;
+  write_channel_altera(input_put_req, put_req);
+
+  put_res = read_channel_altera(output_put_res);
+  assert(put_res.found);
+  assert(put_res.key.x == 0x9217959687663200);
+  assert(put_res.key.y == 0);
+  assert(put_res.key.z == 0);
+  assert(put_res.key.w == 0);
+
+  // offline put 3
+  put_req.key_size = 7;
+  put_req.key.x = 0x3367135389590700;
+  put_req.key.y = 0;
+  put_req.key.z = 0;
+  put_req.key.w = 0;
+  put_req.hash1 = hash1bak;
+  put_req.hash2 = hash_func2(put_req.key, 0);
+  put_req.has_last = 0;                                
+  
+  put_req.val_size = 119;
+  put_req.val.x = 0x3337432285744345;
+  put_req.val.y = 0x2907092709233227;
+  put_req.val.z = 0x7542864631276639;
+  put_req.val.w = 0x7587627629254441;
+  write_channel_altera(input_put_req, put_req);
+    
+  put_req.val.x = 0x1859797030018508;
+  put_req.val.y = 0x0177345569305736;
+  put_req.val.z = 0x8977059379774757;
+  put_req.val.w = 0x8364919734984372;
+  write_channel_altera(input_put_req, put_req);	
+    
+  put_req.val.x = 0x2414100827686357;
+  put_req.val.y = 0x8118525877810554;
+  put_req.val.z = 0x2883884070145614;
+  put_req.val.w = 0x0225495365683325;
+  write_channel_altera(input_put_req, put_req);
+    
+  put_req.val.x = 0x1300342163522862;
+  put_req.val.y = 0x2098162038862333;
+  put_req.val.z = 0x8451804551779500;
+  put_req.val.w = 0;
+  write_channel_altera(input_put_req, put_req);
+
+  put_res = read_channel_altera(output_put_res);
+  assert(put_res.found);
+  assert(put_res.key.x == 0x3367135389590700);
+  assert(put_res.key.y == 0);
+  assert(put_res.key.z == 0);
+  assert(put_res.key.w == 0);  
+
+  // inline put 4
+  put_req.key_size = 5;
+  put_req.key.x = 0x9245238413000000;
+  put_req.key.y = 0;
+  put_req.key.z = 0;
+  put_req.key.w = 0;
+  put_req.hash1 = hash1bak;
+  put_req.hash2 = hash_func2(put_req.key, 0);
+  put_req.has_last = 0;                                                
+  
+  put_req.val_size = 7;
+  put_req.val.x = 0x1349632578494500;
+  put_req.val.y = 0;
+  put_req.val.w = 0;
+  put_req.val.z = 0;
+  write_channel_altera(input_put_req, put_req);
+
+  put_res = read_channel_altera(output_put_res);
+  assert(put_res.found);
+  assert(put_res.key.x == 0x9245238413000000);
+  assert(put_res.key.y == 0);
+  assert(put_res.key.z == 0);
+  assert(put_res.key.w == 0);
+  
+  // offline put 5
+  put_req.key_size = 7;
+  put_req.key.x = 0x4862634908548100;
+  put_req.key.y = 0;
+  put_req.key.z = 0;
+  put_req.key.w = 0;
+  put_req.hash1 = hash1bak;
+  put_req.hash2 = hash_func2(put_req.key, 0);
+  put_req.has_last = 0;                                                
+  
+  put_req.val_size = 119;
+  put_req.val.x = 0x2242886069468233;
+  put_req.val.y = 0x4186422175638982;
+  put_req.val.z = 0x2242225111714050;
+  put_req.val.w = 0x4368511480769583;
+  write_channel_altera(input_put_req, put_req);
+    
+  put_req.val.x = 0x9484735862004718;
+  put_req.val.y = 0x0997201021628478;
+  put_req.val.z = 0x1548096718955067;
+  put_req.val.w = 0x2544785093478179;
+  write_channel_altera(input_put_req, put_req);	
+    
+  put_req.val.x = 0x9399258548310992;
+  put_req.val.y = 0x4571343477479388;
+  put_req.val.z = 0x7799505900209135;
+  put_req.val.w = 0x7282627593306105;
+  write_channel_altera(input_put_req, put_req);
+    
+  put_req.val.x = 0x1076247249231780;
+  put_req.val.y = 0x1849035060051102;
+  put_req.val.z = 0x3907379773001000;
+  put_req.val.w = 0;
+  write_channel_altera(input_put_req, put_req);
+
+  put_res = read_channel_altera(output_put_res);
+  assert(put_res.found);
+  assert(put_res.key.x == 0x4862634908548100);
+  assert(put_res.key.y == 0);
+  assert(put_res.key.z == 0);
+  assert(put_res.key.w == 0);
+
+  // offline put 6
+  put_req.key_size = 7;
+  put_req.key.x = 0x0285026950139600;
+  put_req.key.y = 0;
+  put_req.key.z = 0;
+  put_req.key.w = 0;
+  put_req.hash1 = hash1bak;
+  put_req.hash2 = hash_func2(put_req.key, 0);
+  put_req.has_last = 0;                                                
+  
+  put_req.val_size = 119;
+  put_req.val.x = 0x9884427779443976;
+  put_req.val.y = 0x5923429401641670;
+  put_req.val.z = 0x5671048852213991;
+  put_req.val.w = 0x0166552898205232;
+  write_channel_altera(input_put_req, put_req);
+  
+  put_req.val.x = 0x0030610452503435;
+  put_req.val.y = 0x7012750645997237;
+  put_req.val.z = 0x2690704449485852;
+  put_req.val.w = 0x0977496065137421;
+  write_channel_altera(input_put_req, put_req);
+  
+  put_req.val.x = 0x0219463870830670;
+  put_req.val.y = 0x5491652223898220;
+  put_req.val.z = 0x4620459177673470;
+  put_req.val.w = 0x0748461711813320;
+  write_channel_altera(input_put_req, put_req);
+  
+  put_req.val.x = 0x9603196193849879;
+  put_req.val.y = 0x7103930241474873;
+  put_req.val.z = 0x4887940091589400;
+  put_req.val.w = 0; 
+  write_channel_altera(input_put_req, put_req);
+
+  put_res = read_channel_altera(output_put_res);
+  assert(put_res.found);
+  assert(put_res.key.x == 0x0285026950139600);
+  assert(put_res.key.y == 0);
+  assert(put_res.key.z == 0);
+  assert(put_res.key.w == 0);
+
+  // get 1
+  get_req.key_size = 7;
+  get_req.key.x = 0x4385858283747500;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x4385858283747500);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+  assert(get_res.val_size == 119);
+  assert(get_res.val.x == 0x1336997846177294);
+  assert(get_res.val.y == 0x8494250980676297);
+  assert(get_res.val.z == 0x7569437011715753);
+  assert(get_res.val.w == 0x1405124922887074);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x5331911029178831);
+  assert(get_res.val.y == 0x3366728946916863);
+  assert(get_res.val.z == 0x2163485697675180);
+  assert(get_res.val.w == 0x6673854235623477);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x5400268356029035);
+  assert(get_res.val.y == 0x8206940498632420);
+  assert(get_res.val.z == 0x8322125697889367);
+  assert(get_res.val.w == 0x7658353241787005);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x5296564632648217);
+  assert(get_res.val.y == 0x1664498026808973);
+  assert(get_res.val.z == 0x3710556193597700);
+  assert(get_res.val.w == 0);
+
+  // get 2
+  get_req.key_size = 7;
+  get_req.key.x = 0x9217959687663200;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x9217959687663200);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+  assert(get_res.val_size == 119);
+  assert(get_res.val.x == 0x1581158239075577);
+  assert(get_res.val.y == 0x3353736959745736);
+  assert(get_res.val.z == 0x4175859162917692);
+  assert(get_res.val.w == 0x9686145844313678);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x9458159078367406);
+  assert(get_res.val.y == 0x2854302975003903);
+  assert(get_res.val.z == 0x5636328234808881);
+  assert(get_res.val.w == 0x9372493373502657);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x4859363603803632);
+  assert(get_res.val.y == 0x0066299946184778);
+  assert(get_res.val.z == 0x7590326356593133);
+  assert(get_res.val.w == 0x3095106660619416);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x1374759324457701);
+  assert(get_res.val.y == 0x9161159955261622);
+  assert(get_res.val.z == 0x9166751927697600);
+  assert(get_res.val.w == 0);
+
+  // get 3
+  get_req.key_size = 7;
+  get_req.key.x = 0x3367135389590700;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x3367135389590700);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+  assert(get_res.val_size == 119);
+  assert(get_res.val.x == 0x3337432285744345);
+  assert(get_res.val.y == 0x2907092709233227);
+  assert(get_res.val.z == 0x7542864631276639);
+  assert(get_res.val.w == 0x7587627629254441);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x1859797030018508);
+  assert(get_res.val.y == 0x0177345569305736);
+  assert(get_res.val.z == 0x8977059379774757);
+  assert(get_res.val.w == 0x8364919734984372);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x2414100827686357);
+  assert(get_res.val.y == 0x8118525877810554);
+  assert(get_res.val.z == 0x2883884070145614);
+  assert(get_res.val.w == 0x0225495365683325);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x1300342163522862);
+  assert(get_res.val.y == 0x2098162038862333);
+  assert(get_res.val.z == 0x8451804551779500);
+  assert(get_res.val.w == 0);
+
+  // get 4
+  get_req.key_size = 5;
+  get_req.key.x = 0x9245238413000000;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.found);
+  assert(get_res.key_size == 5);
+  assert(get_res.key.x == 0x9245238413000000);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+  assert(get_res.val_size == 7);
+  assert(get_res.val.x == 0x1349632578494500);
+  assert(get_res.val.y == 0);
+  assert(get_res.val.z == 0);
+  assert(get_res.val.w == 0);
+
+  // get 5
+  get_req.key_size = 7;
+  get_req.key.x = 0x4862634908548100;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x4862634908548100);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+  assert(get_res.val_size == 119);
+  assert(get_res.val.x == 0x2242886069468233);
+  assert(get_res.val.y == 0x4186422175638982);
+  assert(get_res.val.z == 0x2242225111714050);
+  assert(get_res.val.w == 0x4368511480769583);
+  
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.val.x == 0x9484735862004718);
+  assert(get_res.val.y == 0x0997201021628478);
+  assert(get_res.val.z == 0x1548096718955067);
+  assert(get_res.val.w == 0x2544785093478179);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x9399258548310992);
+  assert(get_res.val.y == 0x4571343477479388);
+  assert(get_res.val.z == 0x7799505900209135);
+  assert(get_res.val.w == 0x7282627593306105);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x1076247249231780);
+  assert(get_res.val.y == 0x1849035060051102);
+  assert(get_res.val.z == 0x3907379773001000);
+  assert(get_res.val.w == 0);
+
+  // get 6
+  get_req.key_size = 7;
+  get_req.key.x = 0x0285026950139600;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x0285026950139600);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+  assert(get_res.val_size == 119);
+  assert(get_res.val.x == 0x9884427779443976);
+  assert(get_res.val.y == 0x5923429401641670);
+  assert(get_res.val.z == 0x5671048852213991);
+  assert(get_res.val.w == 0x0166552898205232);
+  
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.val.x == 0x0030610452503435);
+  assert(get_res.val.y == 0x7012750645997237);
+  assert(get_res.val.z == 0x2690704449485852);
+  assert(get_res.val.w == 0x0977496065137421);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x0219463870830670);
+  assert(get_res.val.y == 0x5491652223898220);
+  assert(get_res.val.z == 0x4620459177673470);
+  assert(get_res.val.w == 0x0748461711813320);
+  
+  get_res = read_channel_altera(output_get_res);  
+  assert(get_res.val.x == 0x9603196193849879);
+  assert(get_res.val.y == 0x7103930241474873);
+  assert(get_res.val.z == 0x4887940091589400);
+  assert(get_res.val.w == 0);
+
+  // del
+  del_req.key_size = 7;
+  del_req.key.x = 0x0285026950139600;
+  del_req.key.y = 0;  
+  del_req.key.z = 0;
+  del_req.key.w = 0;
+  del_req.hash1 = hash1bak;
+  del_req.hash2 = hash_func2(del_req.key, 0);
+  write_channel_altera(input_del_req, del_req);
+
+  del_res = read_channel_altera(output_del_res);
+  assert(del_res.found);
+  assert(del_res.key_size == 7);
+  assert(del_res.key.x == 0x0285026950139600);
+  assert(del_res.key.y == 0);
+  assert(del_res.key.z == 0);
+  assert(del_res.key.w == 0);
+
+  // del
+  del_req.key_size = 5;
+  del_req.key.x = 0x9245238413000000;
+  del_req.key.y = 0;  
+  del_req.key.z = 0;
+  del_req.key.w = 0;
+  del_req.hash1 = hash1bak;
+  del_req.hash2 = hash_func2(del_req.key, 0);
+  write_channel_altera(input_del_req, del_req);
+
+  del_res = read_channel_altera(output_del_res);
+  assert(del_res.found);
+  assert(del_res.key_size == 5);
+  assert(del_res.key.x == 0x9245238413000000);
+  assert(del_res.key.y == 0);
+  assert(del_res.key.z == 0);
+  assert(del_res.key.w == 0);
+
+  // del
+  del_req.key_size = 7;
+  del_req.key.x = 0x4862634908548100;
+  del_req.key.y = 0;  
+  del_req.key.z = 0;
+  del_req.key.w = 0;
+  del_req.hash1 = hash1bak;
+  del_req.hash2 = hash_func2(del_req.key, 0);
+  write_channel_altera(input_del_req, del_req);
+
+  del_res = read_channel_altera(output_del_res);
+  assert(del_res.found);
+  assert(del_res.key_size == 7);
+  assert(del_res.key.x == 0x4862634908548100);
+  assert(del_res.key.y == 0);
+  assert(del_res.key.z == 0);
+  assert(del_res.key.w == 0);
+
+  // del
+  del_req.key_size = 7;
+  del_req.key.x = 0x3367135389590700;
+  del_req.key.y = 0;
+  del_req.key.z = 0;
+  del_req.key.w = 0;
+  del_req.hash1 = hash1bak;
+  del_req.hash2 = hash_func2(del_req.key, 0);
+  write_channel_altera(input_del_req, del_req);
+
+  del_res = read_channel_altera(output_del_res);
+  assert(del_res.found);
+  assert(del_res.key_size == 7);
+  assert(del_res.key.x == 0x3367135389590700);
+  assert(del_res.key.y == 0);
+  assert(del_res.key.z == 0);
+  assert(del_res.key.w == 0);
+
+  // del
+  del_req.key_size = 7;
+  del_req.key.x = 0x9217959687663200;
+  del_req.key.y = 0;
+  del_req.key.z = 0;
+  del_req.key.w = 0;
+  del_req.hash1 = hash1bak;
+  del_req.hash2 = hash_func2(del_req.key, 0);
+  write_channel_altera(input_del_req, del_req);
+
+  del_res = read_channel_altera(output_del_res);
+  assert(del_res.found);
+  assert(del_res.key_size == 7);
+  assert(del_res.key.x == 0x9217959687663200);
+  assert(del_res.key.y == 0);
+  assert(del_res.key.z == 0);
+  assert(del_res.key.w == 0);  
+
+  // del
+  del_req.key_size = 7;
+  del_req.key.x = 0x4385858283747500;
+  del_req.key.y = 0;
+  del_req.key.z = 0;
+  del_req.key.w = 0;
+  del_req.hash1 = hash1bak;
+  del_req.hash2 = hash_func2(del_req.key, 0);
+  write_channel_altera(input_del_req, del_req);
+
+  del_res = read_channel_altera(output_del_res);
+  assert(del_res.found);
+  assert(del_res.key_size == 7);
+  assert(del_res.key.x == 0x4385858283747500);
+  assert(del_res.key.y == 0);
+  assert(del_res.key.z == 0);
+  assert(del_res.key.w == 0);
+
+  // get(check whether del works)
+  get_req.key_size = 7;
+  get_req.key.x = 0x4385858283747500;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(!get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x4385858283747500);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+
+  // get
+  get_req.key_size = 5;
+  get_req.key.x = 0x9245238413000000;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(!get_res.found);
+  assert(get_res.key_size == 5);
+  assert(get_res.key.x == 0x9245238413000000);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+
+  // get
+  get_req.key_size = 7;
+  get_req.key.x = 0x9217959687663200;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(!get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x9217959687663200);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+
+  // get
+  get_req.key_size = 7;
+  get_req.key.x = 0x3367135389590700;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(!get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x3367135389590700);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+
+  // get
+  get_req.key_size = 7;
+  get_req.key.x = 0x4862634908548100;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(!get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x4862634908548100);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+
+  // get
+  get_req.key_size = 7;
+  get_req.key.x = 0x0285026950139600;
+  get_req.key.y = 0;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash1bak;
+  get_req.hash2 = hash_func2(get_req.key, 0);
+  get_req.has_last = false;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(!get_res.found);
+  assert(get_res.key_size == 7);
+  assert(get_res.key.x == 0x0285026950139600);
+  assert(get_res.key.y == 0);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
   
   cout << "passed" << endl;
 }

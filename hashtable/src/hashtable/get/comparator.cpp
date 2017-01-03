@@ -219,7 +219,7 @@ hashtable_get_comparator() {
 	}
       }
 
-      bool inline_found;
+      bool inline_found = false;
       ulong2 inline_found_val;
       ushort inline_found_val_size;
 

@@ -1,5 +1,7 @@
+#ifdef __unix__
 #define _CSIM
 #define _UNIT_TEST_SLAB
+#endif
 
 #ifdef _CSIM
 #define _CL_VOID void

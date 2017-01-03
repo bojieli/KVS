@@ -379,6 +379,7 @@ hashtable_put_comparator() {
 	      signal.Sig.LParam[0] = 2 + req.key_size + req.val_size;
 	      bool dummy;
 	      dummy = write_channel_nb_altera(hashtable_put_offline_slab_req, signal.raw);
+	      assert(dummy);
 	      should_write_put_offline_handler = true;
 	      should_forwarding_to_put_offline_handler = true;
 	      val_write_put_offline_handler.req = req;
@@ -407,6 +408,7 @@ hashtable_put_comparator() {
 	      signal.Sig.LParam[0] = 64;
 	      bool dummy;
 	      dummy = write_channel_nb_altera(hashtable_put_newline_slab_req, signal.raw);
+	      assert(dummy);
 	      should_write_put_newline_handler = true;
 	      should_forwarding_to_put_newline_handler = true;
 	      val_write_put_newline_handler.req = req;
@@ -453,26 +455,31 @@ hashtable_put_comparator() {
       if (should_write_return_put_req) {
 	bool dummy;
 	dummy = write_channel_nb_altera(return_put_req, val_write_return_put_req);
+	assert(dummy);
       }
 
       if (should_write_put_offline_handler) {
 	bool dummy;
 	dummy = write_channel_nb_altera(put_offline_handler, val_write_put_offline_handler);
+	assert(dummy);
       }
    
       if (should_write_put_inline_res) {
 	bool dummy;
 	dummy = write_channel_nb_altera(put_inline_res, val_write_put_inline_res);
+	assert(dummy);
       }
       
       if (should_write_put_inline_dma_wr_req_double) {
 	bool dummy;
-	dummy = write_channel_nb_altera(hashtable_put_inline_dma_wr_req_double, val_write_put_inline_dma_wr_req_double);	
+	dummy = write_channel_nb_altera(hashtable_put_inline_dma_wr_req_double, val_write_put_inline_dma_wr_req_double);
+	assert(dummy);
       }
 
       if (should_write_put_newline_handler) {
 	bool dummy;
 	dummy = write_channel_nb_altera(put_newline_handler, val_write_put_newline_handler);
+	assert(dummy);
       }
       
     }

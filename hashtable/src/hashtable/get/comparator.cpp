@@ -270,6 +270,7 @@ hashtable_get_comparator() {
 	    line_in_uchar[63];
 	  req.hash1 >>= 2; // remove the last 2b(valid bit + reserved bit)
 	  bool dummy = write_channel_nb_altera(return_get_req, req);
+	  assert(dummy);
 	}
 	else {
 	  // cannot not find the accroding key!
@@ -287,6 +288,7 @@ hashtable_get_comparator() {
 
       if (should_write_get_inline_res) {
 	bool dummy = write_channel_nb_altera(get_inline_res, val_write_get_inline_res);
+	assert(dummy);
       }
     }
   }

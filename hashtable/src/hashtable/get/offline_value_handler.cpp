@@ -183,6 +183,7 @@ hashtable_get_offline_value_handler() {
     
     if (should_write_get_offline_res) {
       bool dummy = write_channel_nb_altera(get_offline_res, res);
+      assert(dummy);
     }
   }
 }

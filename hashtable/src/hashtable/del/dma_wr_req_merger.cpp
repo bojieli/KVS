@@ -62,6 +62,7 @@ hashtable_del_dma_wr_req_merger() {
     
     if (should_write_hashtable_del_dma_wr_req) {
       bool dummy = write_channel_nb_altera(hashtable_del_dma_wr_req, wr_req.raw);
+      assert(dummy);
     }
     
   }

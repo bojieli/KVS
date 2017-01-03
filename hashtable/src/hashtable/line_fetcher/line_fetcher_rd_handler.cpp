@@ -36,6 +36,7 @@ hashtable_line_fetcher_dma_rd_handler() {
     if (read_rd_req) {
       write_channel_altera(line_fetcher_dma_rd_req, rd_req.raw);
       bool dummy = write_channel_nb_altera(line_fetcher_dma_rd_handler_context, context);
+      assert(dummy);
     }
     
     // retrieve response
@@ -68,6 +69,7 @@ hashtable_line_fetcher_dma_rd_handler() {
 	  state = false;
 	  rd_res_in_ulong8.hi = rd_res;
 	  bool dummy = write_channel_nb_altera(line_fetcher_get_dma_rd_res, rd_res_in_ulong8);
+	  assert(dummy);
 	}
       }
       else if (inflight_rd_res_id == 1) {
@@ -79,6 +81,7 @@ hashtable_line_fetcher_dma_rd_handler() {
 	  state = false;
 	  rd_res_in_ulong8.hi = rd_res;
 	  bool dummy = write_channel_nb_altera(line_fetcher_del_dma_rd_res, rd_res_in_ulong8);
+	  assert(dummy);
 	}
       }
       else if (inflight_rd_res_id == 2) {
@@ -90,6 +93,7 @@ hashtable_line_fetcher_dma_rd_handler() {
 	  state = false;
 	  rd_res_in_ulong8.hi = rd_res;
 	  bool dummy = write_channel_nb_altera(line_fetcher_put_dma_rd_res, rd_res_in_ulong8);
+	  assert(dummy);
 	}
       }      
       else {

@@ -34,6 +34,7 @@ slab_besides_return_req_merger() {
       #endif
       if (req_id != 0) {
 	dummy = write_channel_nb_altera(slab_besides_return_req_context, req_id);
+	assert(dummy);
       }
     }
 
@@ -47,10 +48,12 @@ slab_besides_return_req_merger() {
       res_id = read_channel_nb_altera(slab_besides_return_req_context, &dummy);
       assert(dummy);
       if (res_id == 1) {
-	bool dummy = write_channel_nb_altera(slab_besides_return_res_offline, val_slab_besides_return_res);
+	dummy = write_channel_nb_altera(slab_besides_return_res_offline, val_slab_besides_return_res);
+	assert(dummy);
       }
       else if (res_id == 2) {
-	bool dummy = write_channel_nb_altera(slab_besides_return_res_newline, val_slab_besides_return_res);
+	dummy = write_channel_nb_altera(slab_besides_return_res_newline, val_slab_besides_return_res);
+	assert(dummy);
       }
     }
 #endif    

@@ -47,6 +47,7 @@ hashtable_put_newline_handler() {
 	wr_req.req.data.w = ((wr_req.req.data.w >> 32) << 32) | (((line_addr - slab_start_addr) >> 5) << 2) | (1);
 	bool dummy;
 	dummy = write_channel_nb_altera(hashtable_put_newline_dma_wr_req, wr_req.raw);
+	assert(dummy);
 	put_newline_data.req.has_last = true;
 	put_newline_data.req.hash1 = (line_addr - slab_start_addr) >> 5;
       }
@@ -63,6 +64,7 @@ hashtable_put_newline_handler() {
       }
       bool dummy;
       dummy = write_channel_nb_altera(newline_put_req, put_newline_data.req);
+      assert(dummy);
     }
   }
 }

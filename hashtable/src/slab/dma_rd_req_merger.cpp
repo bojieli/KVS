@@ -10,10 +10,12 @@ slab_dma_rd_req_merger() {
 
     if (read_slab_dma_rd_req) {
       dummy = write_channel_nb_altera(slab_dma_rd_req, dmaReadReqWithId.req.raw);
+      assert(dummy);
       DmaContext context;
       context.id = dmaReadReqWithId.id;
       context.size = (ushort)dmaReadReqWithId.req.req.size;
       dummy = write_channel_nb_altera(slab_dma_handler_rd_req_context, context);
+      assert(dummy);
     }
   }
 }

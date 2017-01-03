@@ -9,6 +9,7 @@ hashtable_put_res_merger() {
     }
     if (read_put_res) {
       bool dummy = write_channel_nb_altera(output_put_res, val_put_res);
+      assert(dummy);
     }
   }
 }

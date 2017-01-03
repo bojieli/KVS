@@ -37,6 +37,7 @@ slab_besides_return() {
   ClSignal init_signal;
   init_signal.raw = read_channel_altera(host_init_slab);
   bool dummy = write_channel_nb_altera(init_slab_dma_rd_handler, init_signal.raw);
+  assert(dummy);
 
 #pragma unroll
   for (int i = 0; i < SLAB_BIN_COUNT; i ++) {
@@ -83,6 +84,7 @@ slab_besides_return() {
   // wait for init_fin signal from slab dma handler
   // which will preload some slab entries
   dummy = read_channel_altera(slab_init_finish);
+  assert(dummy);
 
   while (1) {
     ushort slab_req_size;
@@ -101,6 +103,7 @@ slab_besides_return() {
     for (int i = 0; i < SLAB_BIN_COUNT; i ++) {
       bool dummy, read_add_8_slab_return_table_size;
       dummy = read_channel_nb_altera(add_8_slab_return_table_size[i], &read_add_8_slab_return_table_size);
+      assert(dummy);
       if (read_add_8_slab_return_table_size) {
 	slab_return_table_size[i] += 8;
       }
@@ -117,6 +120,7 @@ slab_besides_return() {
            (!auto_return_mode[i] && slab_return_table_size[i]) && (current_return_table_head_state[i] == PART7))) {
         bool dummy;
 	val_slab_return_table[i] = read_channel_nb_altera(slab_return_table[i], &dummy);
+	assert(dummy);
       }
 
       if (auto_return_mode[i]) {
@@ -167,6 +171,7 @@ slab_besides_return() {
 		host_slab_available_table_head_ptr_offset[i] &= host_slab_available_table_head_ptr_offset_mask[i];
 		bool dummy;
 		dummy = write_channel_nb_altera(slab_bin_dma_rd_req[i], dma_rd_req.raw);
+		assert(dummy);
 		slab_cache_table_size[i] += SLAB_FETCH_FROM_HOST_SIZE;
 	      }
 	      // read from cache table
@@ -177,6 +182,7 @@ slab_besides_return() {
 		  #else
 		  bool dummy;
 		  current_cache_table_head[i] = read_channel_nb_altera(slab_cache_table[i], &dummy);
+		  assert(dummy);
 		  #endif
 		  slab_cache_table_size[i] -= 8;
 

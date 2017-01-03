@@ -20,6 +20,7 @@ pcie_tx() {
       msg.data.eop = 1;
     }
     bool dummy = write_channel_nb_altera(pcie_out, msg.raw);
+    assert(dummy);
     state ^= 1;
   }
 }

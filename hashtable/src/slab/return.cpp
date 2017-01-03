@@ -67,7 +67,9 @@ slab_return() {
 	    bool dummy;
 	    
 	    dummy = write_channel_nb_altera(slab_return_table[i], current_return_table_to_be_put[i]);
+	    assert(dummy);
 	    dummy = write_channel_nb_altera(add_8_slab_return_table_size[i], true);
+	    assert(dummy);
 		
 	    current_return_table_to_be_put_state[i] = PART0;
 	    current_return_table_to_be_put[i].x = 0;

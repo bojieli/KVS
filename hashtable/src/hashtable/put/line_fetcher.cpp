@@ -90,6 +90,7 @@ hashtable_put_line_fetcher() {
 	inflight_val_size_left = 0;
       }
       bool dummy = write_channel_nb_altera(fetching_put_req, req);
+      assert(dummy);
     }    
   }  
 }

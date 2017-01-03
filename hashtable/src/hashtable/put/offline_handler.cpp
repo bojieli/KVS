@@ -528,15 +528,18 @@ hashtable_put_offline_handler() {
       req.raw = val_hashtable_put_offline_update_line_dma_wr_req.x;
       dummy = write_channel_nb_altera(hashtable_put_offline_update_line_dma_wr_req_double,
 				      val_hashtable_put_offline_update_line_dma_wr_req);
+      assert(dummy);
     }
 
     if (should_write_hashtable_put_offline_update_slab_dma_wr_req) {
       dummy = write_channel_nb_altera(hashtable_put_offline_update_slab_dma_wr_req_double,
 				      val_hashtable_put_offline_update_slab_dma_wr_req);
+      assert(dummy);
     }
 
     if (should_write_put_offline_res) {
       dummy = write_channel_nb_altera(put_offline_res, val_write_put_offline_res);
+      assert(dummy);
     }
     
   }

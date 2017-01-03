@@ -26,6 +26,7 @@ slab_dma_rd_handler() {
     dmaReadReqWithId.req = init_dma_rd_req;
     dmaReadReqWithId.id = (uchar)i;
     dummy = write_channel_nb_altera(slab_init_dma_rd_req_with_id, dmaReadReqWithId);
+    assert(dummy);
   }
 
   while (1) {
@@ -75,6 +76,7 @@ slab_dma_rd_handler() {
       dmaReadReqWithId.req = dma_rd_req;
       dmaReadReqWithId.id = rd_req_slab_bin_id;
       dummy = write_channel_nb_altera(slab_non_init_dma_rd_req_with_id, dmaReadReqWithId);
+      assert(dummy);
     }
 
     if (!inflight_rd_res_size_left) {
@@ -82,9 +84,10 @@ slab_dma_rd_handler() {
 	// unblock the slab kernel
 	bool dummy;
 	dummy = write_channel_nb_altera(slab_init_finish, true);
+	assert(dummy);
 	req_fin_cnt ++; // make this block be executed only once
       }
-      bool read_slab_dma_handler_rd_req_context, dummy;
+      bool read_slab_dma_handler_rd_req_context;
       DmaContext context = read_channel_nb_altera(slab_dma_handler_rd_req_context, &read_slab_dma_handler_rd_req_context);
       if (read_slab_dma_handler_rd_req_context) {
 	should_read_slab_dma_rd_res = true;
@@ -119,6 +122,7 @@ slab_dma_rd_handler() {
 	  if (inflight_rd_res_id == i) {
 	    bool dummy;
 	    dummy = write_channel_nb_altera(slab_cache_table[i], val_slab_dma_rd_res);
+	    assert(dummy);
 	  }
 	}
       }

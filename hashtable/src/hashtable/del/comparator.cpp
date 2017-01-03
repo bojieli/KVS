@@ -427,6 +427,7 @@ hashtable_del_comparator() {
 	signal.Sig.LParam[0] = 1 << (offline_found_slab_type + 5);
 	signal.Sig.LParam[1] = offline_found_val_addr + slab_start_addr;
 	bool dummy = write_channel_nb_altera(slab_return_req_offline_slab, signal.raw);
+	assert(dummy);
 
 	if (data_to_write[18] == 0 && data_to_write[19] == 0 && data_to_write[20] == 0 && 
 	    data_to_write[21] == 0 && data_to_write[22] == 0 && data_to_write[23] == 0 && (data_to_write[24] >> 6) == 0 && req.has_last) {
@@ -434,6 +435,7 @@ hashtable_del_comparator() {
 	  signal.Sig.LParam[0] = 64;
 	  signal.Sig.LParam[1] = (req.hash1 << 6) + slab_start_addr;
 	  bool dummy = write_channel_nb_altera(slab_return_req_line, signal.raw);
+	  assert(dummy);
 	  req.last_half_line_data.w = ((req.last_half_line_data.w >> 32) << 32) | (wr_data_in_ulong[3] & 0xFFFFFFFF);
 	  DMA_WriteReq wr_req;
 	  if (!req.last_has_last) {
@@ -445,6 +447,7 @@ hashtable_del_comparator() {
 	  wr_req.req.size = 32;
 	  wr_req.req.data = req.last_half_line_data;
 	  dummy = write_channel_nb_altera(hashtable_del_dma_wr_req_0, wr_req.raw);
+	  assert(dummy);
 	}
 	
       }
@@ -478,6 +481,7 @@ hashtable_del_comparator() {
 	req.hash1 >>= 2; // remove the last 2b(valid bit + reserved bit)
 	req.has_last = true;
 	bool dummy = write_channel_nb_altera(return_del_req, req);
+	assert(dummy);
       }
       else {
 	// cannot find

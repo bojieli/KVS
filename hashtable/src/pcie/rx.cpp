@@ -16,9 +16,11 @@ pcie_rx() {
 	tmp.raw = signal;
 	if (tmp.Sig.Cmd == SIGNAL_INIT_SLAB) {
 	  bool dummy = write_channel_nb_altera(host_init_slab, signal); // for init signal from host
+	  assert(dummy);
 	}
 	else {
 	  bool dummy = write_channel_nb_altera(host_slab_besides_return_req, signal); // for ptr sync signal from host
+	  assert(dummy);
 	}
       }
       state ^= 1;

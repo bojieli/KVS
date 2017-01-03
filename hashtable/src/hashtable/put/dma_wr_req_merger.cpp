@@ -147,13 +147,7 @@ hashtable_put_dma_wr_req_merger() {
     
     if (should_write_hashtable_put_dma_wr_req) {
       bool dummy = write_channel_nb_altera(hashtable_put_dma_wr_req, wr_req.raw);
-      // if (inflight_wr_id == 2) {
-      // 	cout << "***************" << endl;
-      // 	cout << hex << wr_req.req.data.x << endl;
-      // 	cout << wr_req.req.data.y << endl;
-      // 	cout << wr_req.req.data.z << endl;
-      // 	cout << wr_req.req.data.w << endl;
-      // }
+      assert(dummy);
     }
   }
 }

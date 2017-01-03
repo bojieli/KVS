@@ -109,6 +109,7 @@ slab_dma_wr_handler() {
 	  inflight_wr_req_id = 5; // give an invalid number
 	}
 	bool dummy = write_channel_nb_altera(slab_dma_wr_req, val_write_slab_dma_wr_req);
+	assert(dummy);
       }
       
     }

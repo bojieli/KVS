@@ -108,6 +108,7 @@ dma_wr_manager() {
 
       if (should_write_dma_wr_req) {	
 	bool dummy = write_channel_nb_altera(dma_wr_req, val_write_dma_wr_req);
+	assert(dummy);
       }
     }
     

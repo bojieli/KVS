@@ -38,7 +38,9 @@ dma_rd_manager() {
       context.size = (ushort)tmp.req.size;
       context.id = dma_rd_req_id;
       dummy = write_channel_nb_altera(dma_manager_rd_req_context, context);
+      assert(dummy);
       dummy = write_channel_nb_altera(dma_rd_req, dma_read_req);
+      assert(dummy);
     }
 
     // dma read response
@@ -49,6 +51,7 @@ dma_rd_manager() {
 	bool dummy;
 	DmaContext context;
 	context = read_channel_nb_altera(dma_manager_rd_req_context, &dummy);
+	assert(dummy);
 	inflight_rd_res_left_size = context.size;
 	inflight_rd_res_id = context.id;
       }
@@ -64,14 +67,17 @@ dma_rd_manager() {
       if (inflight_rd_res_id == 1) {
 	bool dummy;
 	dummy = write_channel_nb_altera(slab_dma_rd_res, tmp.res.data);
+	assert(dummy);
       }
       else if (inflight_rd_res_id == 2) {
 	bool dummy;
 	dummy = write_channel_nb_altera(line_fetcher_dma_rd_res, tmp.res.data);
+	assert(dummy);
       }
       else if (inflight_rd_res_id == 3) {
 	bool dummy;
 	dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res, tmp.res.data);
+	assert(dummy);
       }
       else {
 	// other channels

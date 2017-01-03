@@ -759,7 +759,7 @@ void test() {
   assert(put_res.key.y == 0);
   assert(put_res.key.z == 0);
   assert(put_res.key.w == 0);
-
+  
   get_req.key_size = 6;
   get_req.key.x = 0x8585482838410000;
   get_req.key.y = 0;

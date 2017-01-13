@@ -40,7 +40,7 @@ hashtable_get_offline_value_handler() {
     
     ulong4 data = read_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res, &read_rd_res);
     
-    if (read_rd_res) {
+    if (read_rd_res) {;
       bool first_res = false;
       if (!inflight_rd_res_size) {
 	bool dummy;
@@ -129,7 +129,7 @@ hashtable_get_offline_value_handler() {
       else {
 	// not the first packet => no metadata
 	// all the contents of this packet belong to val field
-
+ 
 #pragma unroll
 	for (int i = 0; i < 32; i ++) {
 	  if (val_res_idx + i < 32) {
@@ -180,18 +180,7 @@ hashtable_get_offline_value_handler() {
 	  inflight_rd_res_size = 0;
 	  val_res_idx = 0;
 	  last_write = val_size_left;
-	  if (res.is_array_first) {
-	    ArrayGetReqInfo info;
-	    info.net_meta = res.net_meta;
-	    info.key = res.key;
-	    info.key_size = res.key_size;
-	    info.cnt = (res.val.x >> 48) - 1;
-	    if (info.cnt) {
-	      bool dummy = write_channel_nb_altera(array_req_info, info);
-	      assert(dummy);
-	    }
-	  }
-	}	
+	}
       }      
     }
     

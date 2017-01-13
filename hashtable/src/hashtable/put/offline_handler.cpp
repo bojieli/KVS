@@ -331,22 +331,13 @@ hashtable_put_offline_handler() {
 
 	DMA_WriteReq wr_req;
 	wr_req.req.address = slab_grant_addr;
-	if (2 + req.key_size + req.val_size <= 32) {
-	  wr_req.req.size = 32;
+	uchar total_size = 2 + req.key_size + req.val_size;
+	if (total_size & 31) {
+	  wr_req.req.size = ((total_size >> 5) << 5) + 32;
 	}
-	else if (2 + req.key_size + req.val_size <= 64) {
-	  wr_req.req.size = 64;
+	else {
+	  wr_req.req.size = total_size;
 	}
-	else if (2 + req.key_size + req.val_size <= 128) {
-	  wr_req.req.size = 128;
-	}
-	else if (2 + req.key_size + req.val_size <= 256) {
-	  wr_req.req.size = 256;
-	}
-	else if (2 + req.key_size + req.val_size <= 512) {
-	  wr_req.req.size = 512;
-	}
-
 	wr_req.req.data.x = data_in_ulong[0];
 	wr_req.req.data.y = data_in_ulong[1];
 	wr_req.req.data.z = data_in_ulong[2];

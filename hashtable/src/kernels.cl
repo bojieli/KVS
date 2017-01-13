@@ -55,7 +55,7 @@
 #include "hashtable/get/line_fetcher.cpp"
 #include "hashtable/get/res_merger.cpp"
 #include "hashtable/get/offline_value_handler.cpp"
-#include "hashtable/get/array_get_req_generator.cpp"
+#include "hashtable/get/array_req_generator.cpp"
 /**********************************/
 
 /**********************************/

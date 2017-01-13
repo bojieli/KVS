@@ -19,11 +19,10 @@ inline uint hash_func1(const ulong4 *key) {
 
 inline uint hash_func2(const ulong4 *key) {
   uint hash = 0;
-  uint kx = (key -> x >> 36) + (key -> x << 17);
-  uint ky = (key -> y >> 27) + (key -> y << 14);
-  uint kz = (key -> z >> 30) + (key -> z << 19);
-  uint kw = (key -> w >> 33) + (key -> w << 11);
-
+  uint kx = (key -> x >> 4) + (key -> x << 7);
+  uint ky = (key -> y >> 6) + (key -> y << 9);
+  uint kz = (key -> z >> 7) + (key -> z << 11);
+  uint kw = (key -> w >> 22) + (key -> w << 6);
   hash += kx;
   hash += hash << 8;
   hash += ky;
@@ -32,21 +31,23 @@ inline uint hash_func2(const ulong4 *key) {
   hash += hash << 7;
   hash += kw;
   hash += hash >> 3;
-
+  hash = (hash >> 16) + (hash & 0xFFFF);
+  
   return hash & 1023;
 }
 
 
 _CL_VOID
-hashtable_array_req_generator() {
+array_req_generator() {
   ArrayGetReqInfo info;
   info.cnt = 0;
   ushort cnt = 0;
   uchar key_slice[32];
   while (1) {
-    if (cnt == info.cnt) {
+    if (info.cnt == cnt) {
       bool read_array_req_info;
       info = read_channel_nb_altera(array_req_info, &read_array_req_info);
+      cnt = 0;
       if (!read_array_req_info) {
 	info.cnt = 0;
       }
@@ -102,7 +103,7 @@ hashtable_array_req_generator() {
       req.key_size = info.key_size + 1;
 #pragma unroll
       for (int i = 0; i < 32; i ++) {
-	if (i >= info.key_size) {
+	if (i >= info.key_size && i - info.key_size < cnt_in_char_size) {
 	  key_slice[i] = cnt_in_char[i - info.key_size] + '0';
 	}
       }
@@ -126,6 +127,7 @@ hashtable_array_req_generator() {
       req.key.w = tmp[3];
       req.hash1 = hash_func1(&req.key);
       req.hash2 = hash_func2(&req.key);
+      
       bool dummy = write_channel_nb_altera(array_get_req, req);
       assert(dummy);
     }

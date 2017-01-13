@@ -158,3 +158,7 @@ decl_channel(GetRes, 256, output_get_res);
 decl_channel(DelRes, 256, output_del_res);
 // hashtable/put/res_merger -> UNKNOWN
 decl_channel(PutRes, 256, output_put_res);
+// hashtable/get/array_req_generator -> hashtable/get/line_fetcher
+decl_channel(GetReq, 256, array_get_req);
+// hashtable/get/res_merger -> hashtable/get/array_req_generator
+decl_channel(ArrayGetReqInfo, 256, array_req_info);

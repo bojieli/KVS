@@ -8,13 +8,19 @@ hashtable_get_line_fetcher() {
     bool read_get_req;
     GetReq req;
     bool read_from_input;
-    req = read_channel_nb_altera(return_get_req, &read_get_req);
+    req = read_channel_nb_altera(array_get_req, &read_get_req);
     if (!read_get_req) {
-      req = read_channel_nb_altera(input_get_req, &read_get_req);
-      read_from_input = true;
+      req = read_channel_nb_altera(return_get_req, &read_get_req);
+      if (!read_get_req) {
+	req = read_channel_nb_altera(input_get_req, &read_get_req);
+	read_from_input = true;
+      }
+      else {
+	read_from_input = false;
+      }
     }
     else {
-      read_from_input = false;
+      read_from_input = true;
     }
     
     if (read_get_req) {

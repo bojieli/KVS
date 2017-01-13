@@ -25,6 +25,7 @@ typedef struct PutReq {
 }PutReq;
 
 typedef struct GetReq {
+  bool is_array_first;
   uchar net_meta;
   uchar key_size;
   ulong4 key;
@@ -50,6 +51,7 @@ typedef struct AddReq {
 }AddReq;
 
 typedef struct GetRes {
+  bool is_array_first;
   uchar net_meta;
   bool found;
   uchar key_size;
@@ -72,6 +74,13 @@ typedef struct PutRes {
   ulong4 key;
 }PutRes;
 
+typedef struct ArrayGetReqInfo {
+  uchar net_meta;
+  ulong4 key;
+  ushort cnt;
+  uchar key_size;
+}ArrayGetReqInfo;
+
 typedef struct Ulong16 {
   ulong8 x;
   ulong8 y;
@@ -90,6 +99,7 @@ typedef struct PutNewlineType {
 }PutNewlineType;
 
 typedef struct GetOfflineType {
-  ushort size;
   uchar net_meta;
+  bool is_array_first;
+  ushort size;
 }GetOfflineType;

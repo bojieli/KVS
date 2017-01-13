@@ -9,6 +9,7 @@ hashtable_get_res_merger() {
   GetRes show_ahead_get_offline_res;
 
   bool has_inflight_res = false;
+  bool is_first = true;
   
   while (1) {
     bool should_write_get_res = false;
@@ -45,14 +46,29 @@ hashtable_get_res_merger() {
 	is_valid_get_offline_res = false;
 	val_write_get_res = show_ahead_get_offline_res;
 	should_write_get_res = true;
-      }
+      }      
       if (should_write_get_res) {
 	if (inflight_get_res_size_left > 32) {
 	  inflight_get_res_size_left -= 32;
+	  if (is_first) {
+	    is_first = false;
+	    if (val_write_get_res.is_array_first) {
+	      ArrayGetReqInfo info;
+	      info.net_meta = val_write_get_res.net_meta;
+	      info.key = val_write_get_res.key;
+	      info.key_size = val_write_get_res.key_size;
+	      info.cnt = (val_write_get_res.val.x >> 48) - 1;
+	      if (info.cnt) {
+		bool dummy = write_channel_nb_altera(array_req_info, info);
+		assert(dummy);
+	      }
+	    }
+	  }	  
 	}
 	else {
 	  inflight_get_res_size_left = 0;
 	  has_inflight_res = false;
+	  is_first = true;
 	}
       }
     }
@@ -62,3 +78,4 @@ hashtable_get_res_merger() {
     }
   }
 }
+

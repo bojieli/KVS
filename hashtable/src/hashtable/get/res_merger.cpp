@@ -62,3 +62,4 @@ hashtable_get_res_merger() {
     }
   }
 }
+

@@ -9,6 +9,7 @@ hashtable_get_offline_value_handler() {
   ushort key_size;
   ushort val_size;
   uchar net_meta;
+  bool is_array_first;
   bool last_write = false;
 
   while (1) {
@@ -48,6 +49,7 @@ hashtable_get_offline_value_handler() {
 	assert(dummy);
 	inflight_rd_res_size = getOfflineType.size;
 	net_meta = getOfflineType.net_meta;
+	is_array_first = getOfflineType.is_array_first;
 	first_res = true;
       }
 
@@ -101,6 +103,7 @@ hashtable_get_offline_value_handler() {
 	res.net_meta = net_meta;
 	res.key_size = key_size;
 	res.val_size = val_size;
+	res.is_array_first = is_array_first;
 
 	// the lefting part belongs to value field
 	val_res_idx = 30 - key_size;
@@ -177,6 +180,17 @@ hashtable_get_offline_value_handler() {
 	  inflight_rd_res_size = 0;
 	  val_res_idx = 0;
 	  last_write = val_size_left;
+	  if (res.is_array_first) {
+	    ArrayGetReqInfo info;
+	    info.net_meta = res.net_meta;
+	    info.key = res.key;
+	    info.key_size = res.key_size;
+	    info.cnt = (res.val.x >> 48) - 1;
+	    if (info.cnt) {
+	      bool dummy = write_channel_nb_altera(array_req_info, info);
+	      assert(dummy);
+	    }
+	  }
 	}	
       }      
     }

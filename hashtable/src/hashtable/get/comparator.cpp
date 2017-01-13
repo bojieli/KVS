@@ -255,6 +255,7 @@ hashtable_get_comparator() {
 	GetOfflineType getOfflineType;
 	getOfflineType.size = rd_req.req.size;
 	getOfflineType.net_meta = req.net_meta;
+	getOfflineType.is_array_first = req.is_array_first;
 	bool dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_req, rd_req.raw);
 	assert(dummy);
 	dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res_size_with_net_meta, getOfflineType);

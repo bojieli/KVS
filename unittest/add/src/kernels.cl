@@ -746,8 +746,6 @@ void test() {
   assert(get_res.val.y == 0x9584716426546549);
   assert(get_res.val.z == 0x1838485968678729);
   assert(get_res.val.w == 0x7982945792434865);
-
-  get_res = read_channel_altera(output_get_res);
   
   cout << "passed" << endl;
 }

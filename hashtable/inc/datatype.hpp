@@ -13,6 +13,7 @@ typedef struct DmaReadReqWithId {
   uchar id;
 }DmaReadReqWithId;
 
+// * : don't fill it manually, left it blank
 typedef struct PutReq {
   uchar net_meta;
   uchar key_size;
@@ -21,7 +22,7 @@ typedef struct PutReq {
   ulong4 val;
   uint hash1;
   uint hash2;
-  bool has_last;
+  bool has_last; // *
 }PutReq;
 
 typedef struct GetReq {
@@ -31,7 +32,7 @@ typedef struct GetReq {
   ulong4 key;
   uint hash1;
   ushort hash2;
-  bool has_last;
+  bool has_last;  // *
 }GetReq;
 
 typedef struct DelReq {
@@ -40,14 +41,14 @@ typedef struct DelReq {
   ulong4 key;
   uint hash1;
   ushort hash2;
-  bool has_last;
-  uint last_line_addr;
-  ulong4 last_half_line_data;
-  bool last_has_last;
+  bool has_last; // *
+  uint last_line_addr; // *
+  ulong4 last_half_line_data; // *
+  bool last_has_last; // *
 }DelReq;
 
 typedef struct AddReq {
-  bool is_array;
+  bool is_array; // *
   bool is_array_first;
   uchar net_meta;
   uchar key_size;
@@ -55,7 +56,7 @@ typedef struct AddReq {
   AddKeyType delta;
   uint hash1;
   ushort hash2;
-  bool has_last;
+  bool has_last; // *
 }AddReq;
 
 typedef struct GetRes {

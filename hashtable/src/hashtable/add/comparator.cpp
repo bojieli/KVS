@@ -260,11 +260,16 @@ hashtable_add_comparator() {
 	new_val_in_uchar[1] = (inline_found_val >> (2 << 3)) & 0xFF;
 	new_val_in_uchar[2] = (inline_found_val >> (1 << 3)) & 0xFF;
 	new_val_in_uchar[3] = (inline_found_val >> (0 << 3)) & 0xFF;
+
+	uchar new_line_in_uchar[64];
 	
 #pragma unroll
 	for (int i = 0; i < 64; i ++) {
 	  if (i >= inline_found_val_start_idx && i <= inline_found_val_end_idx) {
-	    line_in_uchar[i] = new_val_in_uchar[i - inline_found_val_start_idx];
+	    new_line_in_uchar[i] = new_val_in_uchar[i - inline_found_val_start_idx];
+	  }
+	  else {
+	    new_line_in_uchar[i] = line_in_uchar[i];
 	  }
 	}
 	
@@ -272,14 +277,14 @@ hashtable_add_comparator() {
 #pragma unroll
 	  for (int i = 0; i < 8; i ++) {
 	    tmp[i] =
-	      ((ulong)line_in_uchar[0 + (i << 3)]) << 56 |
-	      ((ulong)line_in_uchar[1 + (i << 3)]) << 48 |
-	      ((ulong)line_in_uchar[2 + (i << 3)]) << 40 |
-	      ((ulong)line_in_uchar[3 + (i << 3)]) << 32 |
-	      ((ulong)line_in_uchar[4 + (i << 3)]) << 24 |
-	      ((ulong)line_in_uchar[5 + (i << 3)]) << 16 |
-	      ((ulong)line_in_uchar[6 + (i << 3)]) << 8 |
-	      ((ulong)line_in_uchar[7 + (i << 3)]) << 0;
+	      ((ulong)new_line_in_uchar[0 + (i << 3)]) << 56 |
+	      ((ulong)new_line_in_uchar[1 + (i << 3)]) << 48 |
+	      ((ulong)new_line_in_uchar[2 + (i << 3)]) << 40 |
+	      ((ulong)new_line_in_uchar[3 + (i << 3)]) << 32 |
+	      ((ulong)new_line_in_uchar[4 + (i << 3)]) << 24 |
+	      ((ulong)new_line_in_uchar[5 + (i << 3)]) << 16 |
+	      ((ulong)new_line_in_uchar[6 + (i << 3)]) << 8 |
+	      ((ulong)new_line_in_uchar[7 + (i << 3)]) << 0;
 	  }
 	// update inline value
 	if (inline_found_val_end_idx < 32) {

@@ -47,7 +47,15 @@ typedef struct DelReq {
 }DelReq;
 
 typedef struct AddReq {
-  bool dummy;
+  bool is_array;
+  bool is_array_first;
+  uchar net_meta;
+  uchar key_size;
+  ulong4 key;
+  AddKeyType delta;
+  uint hash1;
+  ushort hash2;
+  bool has_last;
 }AddReq;
 
 typedef struct GetRes {
@@ -74,12 +82,27 @@ typedef struct PutRes {
   ulong4 key;
 }PutRes;
 
+typedef struct AddRes {
+  uchar net_meta;
+  bool found;
+  uchar key_size;
+  ulong4 key;
+}AddRes;
+
 typedef struct ArrayGetReqInfo {
   uchar net_meta;
   ulong4 key;
   ushort cnt;
   uchar key_size;
 }ArrayGetReqInfo;
+
+typedef struct ArrayAddReqInfo {
+  uchar net_meta;
+  ulong4 key;
+  ushort cnt;
+  uint delta;
+  uchar key_size;
+}ArrayAddReqInfo;
 
 typedef struct Ulong16 {
   ulong8 x;
@@ -103,3 +126,24 @@ typedef struct GetOfflineType {
   bool is_array_first;
   ushort size;
 }GetOfflineType;
+
+typedef struct AddOfflineType {
+  uchar net_meta;
+  bool is_array;
+  bool is_array_first;
+  ushort size;
+  ulong address;
+  uint delta;
+}AddOfflineType;
+
+typedef struct AddOfflineParsed {
+  uchar net_meta;
+  bool is_array;
+  bool is_array_first;
+  ulong base_addr;
+  uchar key_size;
+  ulong4 key;
+  ushort val_size;
+  ulong4 val;
+  uint delta;
+}AddOfflineParsed;

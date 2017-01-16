@@ -60,12 +60,14 @@ slab_besides_return() {
   tmp.y = slab_end_addr;
   write_channel_altera(init_hashtable_del_comparator, tmp);
   write_channel_altera(init_hashtable_put_comparator, tmp);
+  write_channel_altera(init_hashtable_add_comparator, tmp);
   write_channel_altera(init_hashtable_put_offline_handler, tmp);
   write_channel_altera(init_hashtable_del_line_fetcher, tmp);
   write_channel_altera(init_hashtable_get_line_fetcher, tmp);
   write_channel_altera(init_hashtable_put_line_fetcher, tmp);
+  write_channel_altera(init_hashtable_add_line_fetcher, tmp);
   write_channel_altera(init_hashtable_put_newline_handler, tmp);
-    
+  
   // array init
 #pragma unroll
   for (int i = 0; i < SLAB_BIN_COUNT; i ++) {

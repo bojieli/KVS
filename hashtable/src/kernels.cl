@@ -25,6 +25,7 @@
 #include "../inc/dmareadres.h"
 #include "../inc/constant.hpp"
 #include "../inc/datatype.hpp"
+#include "../inc/hashfunc.hpp"
 /**********************************/
 
 /**********************************/
@@ -54,7 +55,7 @@
 #include "hashtable/get/comparator.cpp"
 #include "hashtable/get/line_fetcher.cpp"
 #include "hashtable/get/res_merger.cpp"
-#include "hashtable/get/offline_value_handler.cpp"
+#include "hashtable/get/offline_handler.cpp"
 #include "hashtable/get/array_req_generator.cpp"
 /**********************************/
 
@@ -72,6 +73,16 @@
 #include "hashtable/put/line_fetcher.cpp"
 #include "hashtable/put/comparator.cpp"
 #include "hashtable/put/newline_handler.cpp"
+/**********************************/
+
+/**********************************/
+#include "hashtable/add/comparator.cpp"
+#include "hashtable/add/line_fetcher.cpp"
+#include "hashtable/add/array_req_generator.cpp"
+#include "hashtable/add/offline_handler.cpp"
+#include "hashtable/add/adder.cpp"
+#include "hashtable/add/res_merger.cpp"
+#include "hashtable/add/dma_wr_req_merger.cpp"
 /**********************************/
 
 /**********************************/

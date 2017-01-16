@@ -22,10 +22,14 @@ decl_channel(ulong8, 256, dma_wr_req);
 decl_channel(ulong8, 512, slab_dma_wr_req);
 // slab/besides_return -> slab/dma_wr_handler
 decl_channel(ulong8, 128, slab_bin_dma_wr_req[SLAB_BIN_COUNT]);
-// -> hashtable/line_fetcher/line_fetcher_rd_handler
+// hashtable/src/dma/rd_manager -> hashtable/line_fetcher/line_fetcher_rd_handler
 decl_channel(ulong4, 128, line_fetcher_dma_rd_res);
 // dma/rd_manager -> slab/dma_rd_handler
+#ifdef _CSIM
+decl_channel(ulong4, 1024, slab_dma_rd_res);
+#else
 decl_channel(ulong4, 256, slab_dma_rd_res);
+#endif
 // slab/besides_return -> slab/dma_rd_handler
 decl_channel(ulong8, 1, init_slab_dma_rd_handler);
 // pcie/rx -> slab/besides_return
@@ -142,7 +146,7 @@ decl_channel(Ulong16, 128, hashtable_put_offline_update_slab_dma_wr_req_double);
 decl_channel(PutRes, 256, put_inline_res);
 // hashtable/put/offline_handler -> hashtable/put/res_merger
 decl_channel(PutRes, 256, put_offline_res);
-// hashtable/put/dma_wr_req_merger -> dma/wr_manager.cpp
+// hashtable/put/dma_wr_req_merger -> dma/wr_manager
 decl_channel(ulong8, 256, hashtable_put_dma_wr_req);
 // slab/besides_return -> hashtable/put/newline_handler
 decl_channel(ulong2, 1, init_hashtable_put_newline_handler);
@@ -152,13 +156,51 @@ decl_channel(GetReq, 256, input_get_req);
 decl_channel(DelReq, 256, input_del_req);
 // UNKNOWN -> hashtable/put/line_fetcher
 decl_channel(PutReq, 256, input_put_req);
+// UNKNOWN -> hashtable/add/line_fetcher
+decl_channel(AddReq, 256, input_add_req);
 // hashtable/get/res_merger -> UNKNOWN
 decl_channel(GetRes, 256, output_get_res);
 // hashtable/del/comparator -> UNKNOWN
 decl_channel(DelRes, 256, output_del_res);
 // hashtable/put/res_merger -> UNKNOWN
 decl_channel(PutRes, 256, output_put_res);
+// hashtable/add/res_merger -> UNKNOWN
+decl_channel(AddRes, 256, output_add_res);
 // hashtable/get/array_req_generator -> hashtable/get/line_fetcher
 decl_channel(GetReq, 256, array_get_req);
 // hashtable/get/res_merger -> hashtable/get/array_req_generator
-decl_channel(ArrayGetReqInfo, 256, array_req_info);
+decl_channel(ArrayGetReqInfo, 256, array_get_req_info);
+// slab/besides_return -> hashtable/add/line_fetcher
+decl_channel(ulong2, 1, init_hashtable_add_line_fetcher);
+// slab/besides_return -> hashtable/add/comparator
+decl_channel(ulong2, 1, init_hashtable_add_comparator);
+// hashtable/add/array_req_generator -> hashtable/add/line_fetcher
+decl_channel(AddReq, 256, array_add_req);
+// hashtable/add/offline_handler -> hashtable/add/array_req_generator
+decl_channel(ArrayAddReqInfo, 256, array_add_req_info);
+// hashtable/add/comparator -> hashtable/add/line_fetcher
+decl_channel(AddReq, 256, return_add_req);
+// hashtable/add/line_fetcher -> hashtable/add/comparator
+decl_channel(AddReq, 256, fetching_add_req);
+// hashtable/add/line_fetcher -> hashtable/line_fetcher/line_fetcher_rd_handler
+decl_channel(ulong8, 128, line_fetcher_add_dma_rd_req);
+// hashtable/line_fetcher/line_fetcher_rd_handler -> hashtable/add/comparator
+decl_channel(ulong8, 256, line_fetcher_add_dma_rd_res);
+// hashtable/add/comparator -> hashtable/add/offline_handler
+decl_channel(AddOfflineType, 128, slab_fetcher_add_offline_dma_rd_res_size_with_net_meta);
+// hashtable/add/offline_handler -> hashtable/add/adder
+decl_channel(AddOfflineParsed, 256, add_offline_parsed);
+// hashtable/add/comparator -> hashtable/add/res_merger
+decl_channel(AddRes, 256, add_inline_res);
+// hashtable/add/comparator -> hashtable/add/res_merger
+decl_channel(AddRes, 256, add_offline_res);
+// hashtable/add/comparator -> hashtable/add/dma_wr_req_merger
+decl_channel(Ulong16, 256, hashtable_add_inline_update_line_dma_wr_req_double);
+// hashtable/add/adder -> hashtable/add/dma_wr_req_merger
+decl_channel(ulong8, 256, hashtable_add_offline_update_slab_dma_wr_req);
+// hashtable/add/dma_wr_req_merger -> dma/wr_manager
+decl_channel(ulong8, 256, hashtable_add_dma_wr_req);
+// hashtable/add/comparator -> dma/rd_manager
+decl_channel(ulong8, 128, slab_fetcher_add_offline_dma_rd_req);
+// dma/rd_manager -> hashtable/add/offline_handler
+decl_channel(ulong4, 256, slab_fetcher_add_offline_dma_rd_res);

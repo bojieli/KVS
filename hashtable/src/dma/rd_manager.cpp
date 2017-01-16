@@ -15,7 +15,13 @@ dma_rd_manager() {
       if (!read_dma_rd_req) {
 	dma_read_req = read_channel_nb_altera(slab_fetcher_get_offline_dma_rd_req, &read_dma_rd_req);
 	if (!read_dma_rd_req) {
-	  // other channels
+	  dma_read_req = read_channel_nb_altera(slab_fetcher_add_offline_dma_rd_req, &read_dma_rd_req);
+	  if (!read_dma_rd_req) {
+	    // other channels
+	  }
+	  else {
+	    dma_rd_req_id = 4;
+	  }
 	}
 	else {
 	  dma_rd_req_id = 3;
@@ -77,6 +83,11 @@ dma_rd_manager() {
       else if (inflight_rd_res_id == 3) {
 	bool dummy;
 	dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res, tmp.res.data);
+	assert(dummy);
+      }
+      else if (inflight_rd_res_id == 4) {
+	bool dummy;
+	dummy = write_channel_nb_altera(slab_fetcher_add_offline_dma_rd_res, tmp.res.data);
 	assert(dummy);
       }
       else {

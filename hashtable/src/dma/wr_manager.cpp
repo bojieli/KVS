@@ -12,6 +12,9 @@ dma_wr_manager() {
 
   bool is_valid_hashtable_put_dma_wr_req = false;
   ulong8 show_ahead_hashtable_put_dma_wr_req;
+
+  bool is_valid_hashtable_add_dma_wr_req = false;
+  ulong8 show_ahead_hashtable_add_dma_wr_req;
 			 
   while (1) {
     
@@ -28,6 +31,10 @@ dma_wr_manager() {
 
     if (!is_valid_hashtable_put_dma_wr_req) {
       show_ahead_hashtable_put_dma_wr_req = read_channel_nb_altera(hashtable_put_dma_wr_req, &is_valid_hashtable_put_dma_wr_req);
+    }
+    
+    if (!is_valid_hashtable_add_dma_wr_req) {
+      show_ahead_hashtable_add_dma_wr_req = read_channel_nb_altera(hashtable_add_dma_wr_req, &is_valid_hashtable_add_dma_wr_req);
     }
 
     if (!inflight_wr_req_left_size) {
@@ -52,6 +59,13 @@ dma_wr_manager() {
 	assert(tmp.req.size > 0);
 	inflight_wr_req_id = 3;
       }
+      else if (is_valid_hashtable_add_dma_wr_req) {
+	DMA_ReadReq tmp;
+	tmp.raw = show_ahead_hashtable_add_dma_wr_req;
+	inflight_wr_req_left_size = tmp.req.size;
+	assert(tmp.req.size > 0);
+	inflight_wr_req_id = 4;
+      }
       else {
 	// other write channels
       }
@@ -61,7 +75,8 @@ dma_wr_manager() {
       assert(
 	     inflight_wr_req_id == 1 ||
 	     inflight_wr_req_id == 2 ||
-	     inflight_wr_req_id == 3
+	     inflight_wr_req_id == 3 ||
+	     inflight_wr_req_id == 4
 	     );
       if (inflight_wr_req_id == 1) {
 	if (is_valid_slab_dma_wr_req) {
@@ -100,6 +115,19 @@ dma_wr_manager() {
 	  }
 	  should_write_dma_wr_req = true;
 	  val_write_dma_wr_req = show_ahead_hashtable_put_dma_wr_req;;
+	}	
+      }
+      else if (inflight_wr_req_id == 4) {
+	if (is_valid_hashtable_add_dma_wr_req) {
+	  is_valid_hashtable_add_dma_wr_req = 0;
+	  if (inflight_wr_req_left_size > 32) {
+	    inflight_wr_req_left_size -= 32;
+	  }
+	  else {
+	    inflight_wr_req_left_size = 0;
+	  }
+	  should_write_dma_wr_req = true;
+	  val_write_dma_wr_req = show_ahead_hashtable_add_dma_wr_req;;
 	}	
       }
       else {

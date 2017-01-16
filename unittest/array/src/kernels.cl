@@ -25,6 +25,7 @@
 #include "../inc/dmareadres.h"
 #include "../inc/constant.hpp"
 #include "../inc/datatype.hpp"
+#include "../inc/hashfunc.hpp"
 /**********************************/
 
 /**********************************/
@@ -54,7 +55,7 @@
 #include "hashtable/get/comparator.cpp"
 #include "hashtable/get/line_fetcher.cpp"
 #include "hashtable/get/res_merger.cpp"
-#include "hashtable/get/offline_value_handler.cpp"
+#include "hashtable/get/offline_handler.cpp"
 #include "hashtable/get/array_req_generator.cpp"
 /**********************************/
 
@@ -379,43 +380,6 @@ void host_routine() {
   }
 }
 
-inline uint hash_func1(const ulong4 &key) {
-  uint hash = 0;
-  uint kx = (key.x >> 40) + (key.x << 11);
-  uint ky = (key.y >> 30) + (key.y << 23);
-  uint kz = (key.z >> 36) + (key.z << 14);
-  uint kw = (key.w >> 27) + (key.w << 17);
-
-  hash += kx;
-  hash += hash >> 11;
-  hash += ky;
-  hash += hash << 15;
-  hash += kz;
-  hash += hash << 3;
-  hash += kw;
-  hash += hash >> 7;
-  
-  return hash & ((1 << 30) - 1);
-}
-
-inline uint hash_func2(const ulong4 &key) {
-  uint hash = 0;
-  uint kx = (key.x >> 4) + (key.x << 7);
-  uint ky = (key.y >> 6) + (key.y << 9);
-  uint kz = (key.z >> 7) + (key.z << 11);
-  uint kw = (key.w >> 22) + (key.w << 6);
-  hash += kx;
-  hash += hash << 8;
-  hash += ky;
-  hash += hash >> 10;
-  hash += kz;
-  hash += hash << 7;
-  hash += kw;
-  hash += hash >> 3;
-  hash = (hash >> 16) + (hash & 0xFFFF);
-  return hash & 1023;
-}
-
 inline void string2key(string s, uchar &key_size, ulong4 &key) {
   assert(s.size() <= 32);
   key_size = s.size();
@@ -466,8 +430,8 @@ void test() {
   put_req.key.y = 0x6827751393471276;
   put_req.key.z = 0x4232689301837463;
   put_req.key.w = 0x7164523400000000;
-  put_req.hash1 = hash_func1(put_req.key);
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash1 = hash_func1(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.val_size = 84;
   put_req.val.x = 0x6838129417387585;
   put_req.val.y = 0x1949682545784392;
@@ -475,7 +439,7 @@ void test() {
   put_req.val.w = 0x9384761258689146;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-
+    
   put_req.val.x = 0x9585682577991746;
   put_req.val.y = 0x2848568919298487;
   put_req.val.z = 0x4294869585869813;
@@ -487,6 +451,7 @@ void test() {
   put_req.val.z = 0x8829486500000000;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -502,9 +467,10 @@ void test() {
   get_req.key.y = 0x6827751393471276;
   get_req.key.z = 0x4232689301837463;
   get_req.key.w = 0x7164523400000000;
-  get_req.hash1 = hash_func1(get_req.key);
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash1 = hash_func1(&get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
+  usleep(10000);
   write_channel_altera(input_get_req, get_req);
   
   get_res = read_channel_altera(output_get_res);
@@ -539,12 +505,13 @@ void test() {
   del_req.key.y = 0x6827751393471276;
   del_req.key.z = 0x4232689301837463;
   del_req.key.w = 0x7164523400000000;
-  del_req.hash1 = hash_func1(get_req.key);
-  del_req.hash2 = hash_func2(get_req.key);
+  del_req.hash1 = hash_func1(&get_req.key);
+  del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
+  
   del_res = read_channel_altera(output_del_res);
-
   assert(del_res.found);
   assert(del_res.key_size == 28);
   assert(del_res.key.x == 0x7582754283871485);
@@ -568,8 +535,8 @@ void test() {
   put_req.key.y = 0x1900000000000000;
   put_req.key.z = 0;
   put_req.key.w = 0;
-  put_req.hash1 = hash_func1(put_req.key);
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash1 = hash_func1(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.val_size = 6;
   put_req.val.x = 0x6709502824850000;
   put_req.val.y = 0;
@@ -577,6 +544,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -592,8 +560,8 @@ void test() {
   get_req.key.y = 0x1900000000000000;
   get_req.key.z = 0;
   get_req.key.w = 0;
-  get_req.hash1 = hash_func1(get_req.key);
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash1 = hash_func1(&get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
 
@@ -616,8 +584,8 @@ void test() {
   put_req.key.y = 0;
   put_req.key.z = 0;
   put_req.key.w = 0;
-  put_req.hash1 = hash_func1(put_req.key);
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash1 = hash_func1(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.val_size = 4;
   put_req.val.x = 0x5747219500000000;
   put_req.val.y = 0;
@@ -625,6 +593,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.key_size == 6);
@@ -639,8 +608,8 @@ void test() {
   get_req.key.y = 0;
   get_req.key.z = 0;
   get_req.key.w = 0;
-  get_req.hash1 = hash_func1(get_req.key);
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash1 = hash_func1(&get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
 
@@ -663,8 +632,8 @@ void test() {
   put_req.key.y = 0;
   put_req.key.z = 0;
   put_req.key.w = 0;
-  hash1bak = put_req.hash1 = hash_func2(put_req.key);
-  put_req.hash2 = hash_func2(put_req.key);
+  hash1bak = put_req.hash1 = hash_func2(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.val_size = 4;
   put_req.val.x = 0x9897274100000000;
   put_req.val.y = 0;
@@ -672,6 +641,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -688,7 +658,7 @@ void test() {
   put_req.key.w = 0;
 
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.val_size = 4;
   put_req.val.x = 0x9897274200000000;
   put_req.val.y = 0;
@@ -696,6 +666,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -711,7 +682,7 @@ void test() {
   put_req.key.z = 0;
   put_req.key.w = 0;
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.val_size = 4;
   put_req.val.x = 0x9897274300000000;
   put_req.val.y = 0;
@@ -719,6 +690,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -734,7 +706,7 @@ void test() {
   put_req.key.z = 0;
   put_req.key.w = 0;
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.val_size = 4;
   put_req.val.x = 0x9897274400000000;
   put_req.val.y = 0;
@@ -742,6 +714,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -757,7 +730,7 @@ void test() {
   put_req.key.z = 0;
   put_req.key.w = 0;
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.val_size = 4;
   put_req.val.x = 0x9897274500000000;
   put_req.val.y = 0;
@@ -765,6 +738,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -780,7 +754,7 @@ void test() {
   put_req.key.z = 0;
   put_req.key.w = 0;
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.val_size = 4;
   put_req.val.x = 0x9897274600000000;
   put_req.val.y = 0;
@@ -788,6 +762,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -803,9 +778,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -821,9 +797,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -839,10 +816,11 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  
+  usleep(10000);
+    
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
   assert(get_res.key_size == 6);
@@ -857,9 +835,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -875,9 +854,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -893,9 +873,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -911,9 +892,10 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(get_req.key);
+  del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -929,9 +911,10 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(get_req.key);
+  del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -947,9 +930,10 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(get_req.key);
+  del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -965,9 +949,10 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(get_req.key);
+  del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -983,9 +968,10 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(get_req.key);
+  del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -1001,9 +987,10 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(get_req.key);
+  del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -1020,8 +1007,8 @@ void test() {
   put_req.key.y = 0;
   put_req.key.z = 0;
   put_req.key.w = 0;
-  hash1bak = put_req.hash1 = hash_func1(put_req.key);
-  put_req.hash2 = hash_func2(put_req.key);
+  hash1bak = put_req.hash1 = hash_func1(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.has_last = 0;
   
   put_req.val_size = 119;
@@ -1048,6 +1035,7 @@ void test() {
   put_req.val.z = 0x3710556193597700;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1063,7 +1051,7 @@ void test() {
   put_req.key.z = 0;
   put_req.key.w = 0;
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.has_last = 0;                
   
   put_req.val_size = 119;
@@ -1090,6 +1078,7 @@ void test() {
   put_req.val.z = 0x9166751927697600;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1105,7 +1094,7 @@ void test() {
   put_req.key.z = 0;
   put_req.key.w = 0;
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.has_last = 0;                                
   
   put_req.val_size = 119;
@@ -1132,6 +1121,7 @@ void test() {
   put_req.val.z = 0x8451804551779500;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1147,7 +1137,7 @@ void test() {
   put_req.key.z = 0;
   put_req.key.w = 0;
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.has_last = 0;                                                
   
   put_req.val_size = 7;
@@ -1156,6 +1146,7 @@ void test() {
   put_req.val.w = 0;
   put_req.val.z = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1171,7 +1162,7 @@ void test() {
   put_req.key.z = 0;
   put_req.key.w = 0;
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.has_last = 0;                                                
   
   put_req.val_size = 119;
@@ -1198,6 +1189,7 @@ void test() {
   put_req.val.z = 0x3907379773001000;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1213,7 +1205,7 @@ void test() {
   put_req.key.z = 0;
   put_req.key.w = 0;
   put_req.hash1 = hash1bak;
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   put_req.has_last = 0;                                                
   
   put_req.val_size = 119;
@@ -1240,6 +1232,7 @@ void test() {
   put_req.val.z = 0x4887940091589400;
   put_req.val.w = 0; 
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1255,9 +1248,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1297,9 +1291,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1339,9 +1334,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1381,9 +1377,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1405,9 +1402,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1447,10 +1445,11 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-
+  usleep(10000);
+  
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
   assert(get_res.key_size == 7);
@@ -1489,8 +1488,9 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(del_req.key);
+  del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1507,8 +1507,9 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(del_req.key);
+  del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1525,8 +1526,9 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(del_req.key);
+  del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1543,8 +1545,9 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(del_req.key);
+  del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1561,8 +1564,9 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(del_req.key);
+  del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1579,8 +1583,9 @@ void test() {
   del_req.key.z = 0;
   del_req.key.w = 0;
   del_req.hash1 = hash1bak;
-  del_req.hash2 = hash_func2(del_req.key);
+  del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
+  usleep(10000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1597,9 +1602,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1616,9 +1622,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1635,9 +1642,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1654,9 +1662,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1673,9 +1682,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1692,9 +1702,10 @@ void test() {
   get_req.key.z = 0;
   get_req.key.w = 0;
   get_req.hash1 = hash1bak;
-  get_req.hash2 = hash_func2(get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1711,8 +1722,8 @@ void test() {
   string2key("$arr", put_req.key_size, put_req.key);  
   req_key_size = put_req.key_size;
   req_key = put_req.key; 
-  put_req.hash1 = hash_func1(put_req.key);
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash1 = hash_func1(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   
   put_req.val_size = 84;  
   put_req.val.x = 0x0002129417387585;
@@ -1733,6 +1744,7 @@ void test() {
   put_req.val.z = 0x8829486500000000;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1742,8 +1754,8 @@ void test() {
   string2key("$arr1", put_req.key_size, put_req.key);  
   req_key_size = put_req.key_size;
   req_key = put_req.key; 
-  put_req.hash1 = hash_func1(put_req.key);
-  put_req.hash2 = hash_func2(put_req.key);
+  put_req.hash1 = hash_func1(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
   
   put_req.val_size = 32;  
   put_req.val.x = 0x3423423282184374;
@@ -1752,22 +1764,22 @@ void test() {
   put_req.val.w = 0x7982945692434864;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
+  usleep(10000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
   assert(put_res.key_size == req_key_size);
   assert(put_res.key == req_key);  
 
-  string2key("$arr", put_req.key_size, put_req.key);  
-  req_key_size = put_req.key_size;
-  req_key = put_req.key; 
-  get_req.key_size = req_key_size;
-  get_req.key = req_key;
-  get_req.hash1 = hash_func1(get_req.key);
-  get_req.hash2 = hash_func2(get_req.key);
+  string2key("$arr", get_req.key_size, get_req.key);  
+  req_key_size = get_req.key_size;
+  req_key = get_req.key; 
+  get_req.hash1 = hash_func1(&get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   get_req.is_array_first = true;
   write_channel_altera(input_get_req, get_req);
+  usleep(10000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1829,9 +1841,9 @@ int main() {
   
   boost::thread t_hashtable_get_comparator(&hashtable_get_comparator);
   boost::thread t_hashtable_get_line_fetcher(&hashtable_get_line_fetcher);
-  boost::thread t_hashtable_get_offline_value_handler(&hashtable_get_offline_value_handler);
+  boost::thread t_hashtable_get_offline_handler(&hashtable_get_offline_handler);
   boost::thread t_hashtable_get_res_merger(&hashtable_get_res_merger);
-  boost::thread t_hashtable_get_array_req_generator(&array_req_generator);
+  boost::thread t_hashtable_get_array_req_generator(&hashtable_get_array_req_generator);
   
   boost::thread t_hashtable_del_comparator(&hashtable_del_comparator);
   boost::thread t_hashtable_del_dma_wr_req_merger(&hashtable_del_dma_wr_req_merger);  

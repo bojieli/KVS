@@ -59,7 +59,7 @@ hashtable_get_res_merger() {
 	      info.key_size = val_write_get_res.key_size;
 	      info.cnt = (val_write_get_res.val.x >> 48) - 1;
 	      if (info.cnt) {
-		bool dummy = write_channel_nb_altera(array_req_info, info);
+		bool dummy = write_channel_nb_altera(array_get_req_info, info);
 		assert(dummy);
 	      }
 	    }

@@ -46,7 +46,7 @@ T read_channel_altera(channel<T, N> &Q) {
 
 template <typename T, int N>
 bool write_channel_nb_altera(channel<T, N> &Q, T const &val) {
-  bool ret =  Q.push(val);
+  bool ret = Q.push(val);
   return ret;
 }
 

@@ -16,3 +16,7 @@
 
 #define CLIENT_REQUEST_PUT (1)
 #define CLIENT_REQUEST_GET (2)
+
+#define ADD_KEY_SIZE (4)
+#define AddKeyType uint
+  

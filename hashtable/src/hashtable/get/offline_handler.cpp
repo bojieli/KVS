@@ -1,5 +1,5 @@
 _CL_VOID
-hashtable_get_offline_value_handler() {
+hashtable_get_offline_handler() {
   ushort inflight_rd_res_size = 0;
   ushort val_size_left = 0;
   uchar val_res_idx = 0;
@@ -40,7 +40,7 @@ hashtable_get_offline_value_handler() {
     
     ulong4 data = read_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res, &read_rd_res);
     
-    if (read_rd_res) {;
+    if (read_rd_res) {
       bool first_res = false;
       if (!inflight_rd_res_size) {
 	bool dummy;
@@ -52,7 +52,7 @@ hashtable_get_offline_value_handler() {
 	is_array_first = getOfflineType.is_array_first;
 	first_res = true;
       }
-
+      
       uchar data_in_uchar[32];
 #pragma unroll      
       for (int i = 0; i < 8; i ++) {
@@ -126,7 +126,7 @@ hashtable_get_offline_value_handler() {
 	  last_write = true;
 	}      	
       }
-      else {
+      else if (val_size_left) {
 	// not the first packet => no metadata
 	// all the contents of this packet belong to val field
  

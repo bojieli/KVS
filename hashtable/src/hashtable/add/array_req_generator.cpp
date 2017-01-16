@@ -1,13 +1,13 @@
 _CL_VOID
-hashtable_get_array_req_generator() {
-  ArrayGetReqInfo info;
+hashtable_add_array_req_generator() {
+  ArrayAddReqInfo info;
   info.cnt = 0;
   ushort cnt = 0;
   uchar key_slice[32];
   while (1) {
     if (info.cnt == cnt) {
       bool read_array_req_info;
-      info = read_channel_nb_altera(array_get_req_info, &read_array_req_info);
+      info = read_channel_nb_altera(array_add_req_info, &read_array_req_info);
       cnt = 0;
       if (!read_array_req_info) {
 	info.cnt = 0;
@@ -58,10 +58,11 @@ hashtable_get_array_req_generator() {
 	cnt_in_char[0] = cnt / 10000;
       }
       
-      GetReq req;
+      AddReq req;
       req.is_array_first = false;
       req.net_meta = info.net_meta;
       req.key_size = info.key_size + 1;
+      req.delta = info.delta;
 #pragma unroll
       for (int i = 0; i < 32; i ++) {
 	if (i >= info.key_size && i - info.key_size < cnt_in_char_size) {
@@ -89,7 +90,7 @@ hashtable_get_array_req_generator() {
       req.hash1 = hash_func1(&req.key);
       req.hash2 = hash_func2(&req.key);
 
-      bool dummy = write_channel_nb_altera(array_get_req, req);
+      bool dummy = write_channel_nb_altera(array_add_req, req);
       assert(dummy);
     }
   }

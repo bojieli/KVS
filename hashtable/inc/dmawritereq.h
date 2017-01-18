@@ -19,4 +19,17 @@ struct __attribute__((packed))
 #pragma pack(pop)
 #endif
  req;
-} DMA_WriteReq;
+}DMA_WriteReq;   
+
+typedef struct __attribute__((packed)) DMA_WriteReq_Compressed {
+  ulong address;
+  uint size;
+  ulong4 data;
+}DMA_WriteReq_Compressed;
+
+typedef struct __attribute__((packed)) DMA_WriteReq_Compressed_Double {
+  DMA_WriteReq_Compressed x;
+  DMA_WriteReq_Compressed y;
+  bool valid2;
+}DMA_WriteReq_Compressed_Double;
+

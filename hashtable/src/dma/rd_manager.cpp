@@ -7,15 +7,16 @@ dma_rd_manager() {
 
   while (1) {
     // dma read request
-    ulong8 dma_read_req;
+    DMA_ReadReq dma_read_req;
+    DMA_ReadReq_Compressed dma_rd_req_compressed;
     bool read_dma_rd_req;
-    dma_read_req = read_channel_nb_altera(slab_dma_rd_req, &read_dma_rd_req);
+    dma_rd_req_compressed = read_channel_nb_altera(slab_dma_rd_req, &read_dma_rd_req);
     if (!read_dma_rd_req) {
-      dma_read_req = read_channel_nb_altera(line_fetcher_dma_rd_req, &read_dma_rd_req);
+      dma_rd_req_compressed = read_channel_nb_altera(line_fetcher_dma_rd_req, &read_dma_rd_req);
       if (!read_dma_rd_req) {
-	dma_read_req = read_channel_nb_altera(slab_fetcher_get_offline_dma_rd_req, &read_dma_rd_req);
+        dma_rd_req_compressed = read_channel_nb_altera(slab_fetcher_get_offline_dma_rd_req, &read_dma_rd_req);
 	if (!read_dma_rd_req) {
-	  dma_read_req = read_channel_nb_altera(slab_fetcher_add_offline_dma_rd_req, &read_dma_rd_req);
+	  dma_rd_req_compressed = read_channel_nb_altera(slab_fetcher_add_offline_dma_rd_req, &read_dma_rd_req);
 	  if (!read_dma_rd_req) {
 	    // other channels
 	  }
@@ -36,22 +37,22 @@ dma_rd_manager() {
     }
 
     if (read_dma_rd_req) {
-      DMA_ReadReq tmp;
-      tmp.raw = dma_read_req;
       // save context, used for demuxing when get response
       bool dummy;
       DmaContext context;
-      context.size = (ushort)tmp.req.size;
+      dma_read_req.req.address = dma_rd_req_compressed.address;
+      dma_read_req.req.size = dma_rd_req_compressed.size;     
+      context.size = (ushort)dma_read_req.req.size;
       context.id = dma_rd_req_id;
       dummy = write_channel_nb_altera(dma_manager_rd_req_context, context);
       assert(dummy);
-      dummy = write_channel_nb_altera(dma_rd_req, dma_read_req);
+      dummy = write_channel_nb_altera(dma_rd_req, dma_read_req.raw);
       assert(dummy);
     }
 
     // dma read response
     bool read_dma_rd_res;
-    ulong8 dma_read_res = read_channel_nb_altera(dma_rd_res, &read_dma_rd_res);
+    ulong4 dma_read_res = read_channel_nb_altera(dma_rd_res, &read_dma_rd_res);
     if (read_dma_rd_res) {
       if (!inflight_rd_res_left_size) {
 	bool dummy;

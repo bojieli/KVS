@@ -20,7 +20,7 @@ hashtable_add_comparator() {
     AddRes val_write_add_inline_res;
 
     bool should_write_hashtable_add_inline_update_line_dma_wr_req_double = false;
-    Ulong16 val_hashtable_add_inline_update_line_dma_wr_req_double;
+    DMA_WriteReq_Compressed_Double val_hashtable_add_inline_update_line_dma_wr_req_double;
         
     if (!is_valid_line_fetcher_add_dma_rd_res) {
       show_ahead_line_fetcher_add_dma_rd_res = read_channel_nb_altera(line_fetcher_add_dma_rd_res, &is_valid_line_fetcher_add_dma_rd_res);
@@ -262,16 +262,23 @@ hashtable_add_comparator() {
 	new_val_in_uchar[3] = (inline_found_val >> (0 << 3)) & 0xFF;
 
 	uchar new_line_in_uchar[64];
+
+#define unroll_bs(idx)							\
+	else if (inline_found_val_start_idx == idx && i >= idx && i <= idx + 3) { \
+	  new_line_in_uchar[i] = new_val_in_uchar[i - idx];		\
+	} 
 	
 #pragma unroll
 	for (int i = 0; i < 64; i ++) {
-	  if (i >= inline_found_val_start_idx && i <= inline_found_val_end_idx) {
-	    new_line_in_uchar[i] = new_val_in_uchar[i - inline_found_val_start_idx];
+	  if (inline_found_val_start_idx == 2 && i >= 2 && i <= 2 + 3) { 
+	    new_line_in_uchar[i] = new_val_in_uchar[i - 2]; 
 	  }
+	  UNROLL_3_to_63
 	  else {
 	    new_line_in_uchar[i] = line_in_uchar[i];
 	  }
 	}
+#undef unroll_bs	
 	
 	ulong tmp[8];
 #pragma unroll
@@ -289,46 +296,46 @@ hashtable_add_comparator() {
 	// update inline value
 	if (inline_found_val_end_idx < 32) {
 	  // do dma write on first half
-	  DMA_WriteReq wr_req;
-	  wr_req.req.size = 32;
-	  wr_req.req.address = (req.hash1 << 6) + line_start_addr;	  
-	  wr_req.req.data.x = tmp[0];
-	  wr_req.req.data.y = tmp[1];
-	  wr_req.req.data.z = tmp[2];
-	  wr_req.req.data.w = tmp[3];
-	  val_hashtable_add_inline_update_line_dma_wr_req_double.x = wr_req.raw;
+	  DMA_WriteReq_Compressed wr_req_compressed;
+	  wr_req_compressed.size = 32;
+	  wr_req_compressed.address = (req.hash1 << 6) + line_start_addr;	  
+	  wr_req_compressed.data.x = tmp[0];
+	  wr_req_compressed.data.y = tmp[1];
+	  wr_req_compressed.data.z = tmp[2];
+	  wr_req_compressed.data.w = tmp[3];
+	  val_hashtable_add_inline_update_line_dma_wr_req_double.x = wr_req_compressed;
 	  val_hashtable_add_inline_update_line_dma_wr_req_double.valid2 = false;
 	  should_write_hashtable_add_inline_update_line_dma_wr_req_double = true;
 	}
 	else if (inline_found_val_start_idx >= 32) {
 	  // do dma write on last half
-	  DMA_WriteReq wr_req;
-	  wr_req.req.size = 32;
-	  wr_req.req.address = (req.hash1 << 6) + line_start_addr + 32;
-	  wr_req.req.data.x = tmp[4];
-	  wr_req.req.data.y = tmp[5];
-	  wr_req.req.data.z = tmp[6];
-	  wr_req.req.data.w = tmp[7];
-	  val_hashtable_add_inline_update_line_dma_wr_req_double.x = wr_req.raw;
+	  DMA_WriteReq_Compressed wr_req_compressed;
+	  wr_req_compressed.size = 32;
+	  wr_req_compressed.address = (req.hash1 << 6) + line_start_addr + 32;
+	  wr_req_compressed.data.x = tmp[4];
+	  wr_req_compressed.data.y = tmp[5];
+	  wr_req_compressed.data.z = tmp[6];
+	  wr_req_compressed.data.w = tmp[7];
+	  val_hashtable_add_inline_update_line_dma_wr_req_double.x = wr_req_compressed;
 	  val_hashtable_add_inline_update_line_dma_wr_req_double.valid2 = false;
 	  should_write_hashtable_add_inline_update_line_dma_wr_req_double = true;
 	}
 	else {
 	  // worst case, this val cross the boundry
-	  DMA_WriteReq wr_req;
-	  wr_req.req.size = 64;
-	  wr_req.req.address = (req.hash1 << 6) + line_start_addr;
-	  wr_req.req.data.x = tmp[0];
-	  wr_req.req.data.y = tmp[1];
-	  wr_req.req.data.z = tmp[2];
-	  wr_req.req.data.w = tmp[3];	  
-	  val_hashtable_add_inline_update_line_dma_wr_req_double.x = wr_req.raw;
-	  wr_req.req.size = wr_req.req.address = 0;
-	  wr_req.req.data.x = tmp[4];
-	  wr_req.req.data.y = tmp[5];
-	  wr_req.req.data.z = tmp[6];
-	  wr_req.req.data.w = tmp[7];
-	  val_hashtable_add_inline_update_line_dma_wr_req_double.y = wr_req.raw;
+	  DMA_WriteReq_Compressed wr_req_compressed;
+	  wr_req_compressed.size = 64;
+	  wr_req_compressed.address = (req.hash1 << 6) + line_start_addr;
+	  wr_req_compressed.data.x = tmp[0];
+	  wr_req_compressed.data.y = tmp[1];
+	  wr_req_compressed.data.z = tmp[2];
+	  wr_req_compressed.data.w = tmp[3];	  
+	  val_hashtable_add_inline_update_line_dma_wr_req_double.x = wr_req_compressed;
+	  wr_req_compressed.size = wr_req_compressed.address = 0;
+	  wr_req_compressed.data.x = tmp[4];
+	  wr_req_compressed.data.y = tmp[5];
+	  wr_req_compressed.data.z = tmp[6];
+	  wr_req_compressed.data.w = tmp[7];
+	  val_hashtable_add_inline_update_line_dma_wr_req_double.y = wr_req_compressed;
 	  val_hashtable_add_inline_update_line_dma_wr_req_double.valid2 = true;
 	  should_write_hashtable_add_inline_update_line_dma_wr_req_double = true;
 	}
@@ -343,6 +350,7 @@ hashtable_add_comparator() {
       }
       else if (offline_found) {
 	DMA_ReadReq rd_req;
+	DMA_ReadReq_Compressed rd_req_compressed;
 	rd_req.req.address = offline_found_val_addr + slab_start_addr;
 	rd_req.req.size = 1 << (offline_found_slab_type + 5);
 	AddOfflineType addOfflineType;
@@ -352,7 +360,9 @@ hashtable_add_comparator() {
 	addOfflineType.is_array = req.is_array;
 	addOfflineType.address = rd_req.req.address;
 	addOfflineType.delta = req.delta;
-	bool dummy = write_channel_nb_altera(slab_fetcher_add_offline_dma_rd_req, rd_req.raw);
+	rd_req_compressed.address = rd_req.req.address;
+	rd_req_compressed.size = rd_req.req.size;
+	bool dummy = write_channel_nb_altera(slab_fetcher_add_offline_dma_rd_req, rd_req_compressed);
 	assert(dummy);
 	dummy = write_channel_nb_altera(slab_fetcher_add_offline_dma_rd_res_size_with_net_meta, addOfflineType);
 	assert(dummy);

@@ -26,6 +26,7 @@
 #include "../inc/constant.hpp"
 #include "../inc/datatype.hpp"
 #include "../inc/hashfunc.hpp"
+#include "../inc/unroll.hpp"
 /**********************************/
 
 /**********************************/

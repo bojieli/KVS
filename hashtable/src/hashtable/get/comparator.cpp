@@ -14,14 +14,14 @@ hashtable_get_comparator() {
     GetReq req;
     
     if (!is_valid_line_fetcher_get_dma_rd_res) {
-      show_ahead_line_fetcher_get_dma_rd_res = read_channel_nb_altera(line_fetcher_get_dma_rd_res, &is_valid_line_fetcher_get_dma_rd_res);
+      show_ahead_line_fetcher_get_dma_rd_res = read_channel_nb_altera(line_fetcher_get_dma_rd_res, &is_valid_line_fetcher_get_dma_rd_res);     	
     }
 
     if (!is_valid_fetching_get_req) {
       show_ahead_fetching_get_req = read_channel_nb_altera(fetching_get_req, &is_valid_fetching_get_req);
     }
 
-    if (is_valid_line_fetcher_get_dma_rd_res && is_valid_fetching_get_req) {
+    if (is_valid_line_fetcher_get_dma_rd_res && is_valid_fetching_get_req) {      
       is_valid_line_fetcher_get_dma_rd_res = false;
       is_valid_fetching_get_req = false;
 
@@ -250,13 +250,16 @@ hashtable_get_comparator() {
       }
       else if (offline_found) {
 	DMA_ReadReq rd_req;
+	DMA_ReadReq_Compressed rd_req_compressed;
 	rd_req.req.address = offline_found_val_addr + slab_start_addr;
 	rd_req.req.size = 1 << (offline_found_slab_type + 5);
 	GetOfflineType getOfflineType;
 	getOfflineType.size = rd_req.req.size;
 	getOfflineType.net_meta = req.net_meta;
 	getOfflineType.is_array_first = req.is_array_first;
-	bool dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_req, rd_req.raw);
+	rd_req_compressed.address = rd_req.req.address;
+	rd_req_compressed.size = rd_req.req.size;
+	bool dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_req, rd_req_compressed);
 	assert(dummy);
 	dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res_size_with_net_meta, getOfflineType);
 	assert(dummy);

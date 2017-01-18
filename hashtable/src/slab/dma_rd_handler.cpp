@@ -23,7 +23,10 @@ slab_dma_rd_handler() {
     init_dma_rd_req.req.size = SLAB_CACHE_TABLE_MAX_SIZE << 2;
     bool dummy;
     DmaReadReqWithId dmaReadReqWithId;
-    dmaReadReqWithId.req = init_dma_rd_req;
+    DMA_ReadReq_Compressed dma_rd_req_compressed;
+    dma_rd_req_compressed.address = init_dma_rd_req.req.address;
+    dma_rd_req_compressed.size = init_dma_rd_req.req.size;
+    dmaReadReqWithId.req = dma_rd_req_compressed;
     dmaReadReqWithId.id = (uchar)i;
     dummy = write_channel_nb_altera(slab_init_dma_rd_req_with_id, dmaReadReqWithId);
     assert(dummy);
@@ -31,36 +34,37 @@ slab_dma_rd_handler() {
 
   while (1) {
     DMA_ReadReq dma_rd_req;
+    DMA_ReadReq_Compressed dma_rd_req_compressed;
     bool should_write_slab_dma_rd_req = false;
     uchar rd_req_slab_bin_id;
     bool should_read_slab_dma_rd_res = false;
     // already finish initializing, execute core logic
     bool read_slab_bin_dma_rd_req;
-    dma_rd_req.raw = read_channel_nb_altera(slab_bin_dma_rd_req[0], &read_slab_bin_dma_rd_req);
+    dma_rd_req_compressed = read_channel_nb_altera(slab_bin_dma_rd_req[0], &read_slab_bin_dma_rd_req);
     if (read_slab_bin_dma_rd_req) {
       rd_req_slab_bin_id = 0;
       should_write_slab_dma_rd_req = true;
     }
     else {
-      dma_rd_req.raw = read_channel_nb_altera(slab_bin_dma_rd_req[1], &read_slab_bin_dma_rd_req);
+      dma_rd_req_compressed = read_channel_nb_altera(slab_bin_dma_rd_req[1], &read_slab_bin_dma_rd_req);
       if (read_slab_bin_dma_rd_req) {
 	rd_req_slab_bin_id = 1;
 	should_write_slab_dma_rd_req = true;
       }
       else {
-	dma_rd_req.raw = read_channel_nb_altera(slab_bin_dma_rd_req[2], &read_slab_bin_dma_rd_req);
+	dma_rd_req_compressed = read_channel_nb_altera(slab_bin_dma_rd_req[2], &read_slab_bin_dma_rd_req);
 	if (read_slab_bin_dma_rd_req) {
 	  rd_req_slab_bin_id = 2;
 	  should_write_slab_dma_rd_req = true;
 	}
 	else {
-	  dma_rd_req.raw = read_channel_nb_altera(slab_bin_dma_rd_req[3], &read_slab_bin_dma_rd_req);
+	  dma_rd_req_compressed = read_channel_nb_altera(slab_bin_dma_rd_req[3], &read_slab_bin_dma_rd_req);
 	  if (read_slab_bin_dma_rd_req) {
 	    rd_req_slab_bin_id = 3;
 	    should_write_slab_dma_rd_req = true;
 	  }
 	  else {
-	    dma_rd_req.raw = read_channel_nb_altera(slab_bin_dma_rd_req[4], &read_slab_bin_dma_rd_req);
+	    dma_rd_req_compressed = read_channel_nb_altera(slab_bin_dma_rd_req[4], &read_slab_bin_dma_rd_req);
 	    if (read_slab_bin_dma_rd_req) {
 	      rd_req_slab_bin_id = 4;
 	      should_write_slab_dma_rd_req = true;
@@ -73,7 +77,7 @@ slab_dma_rd_handler() {
     if (should_write_slab_dma_rd_req) {
       bool dummy;
       DmaReadReqWithId dmaReadReqWithId;
-      dmaReadReqWithId.req = dma_rd_req;
+      dmaReadReqWithId.req = dma_rd_req_compressed;
       dmaReadReqWithId.id = rd_req_slab_bin_id;
       dummy = write_channel_nb_altera(slab_non_init_dma_rd_req_with_id, dmaReadReqWithId);
       assert(dummy);

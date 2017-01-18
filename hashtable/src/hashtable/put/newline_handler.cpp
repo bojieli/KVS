@@ -35,18 +35,18 @@ hashtable_put_newline_handler() {
 	is_valid_newline_addr = false;
 	val_size_left = put_newline_data.req.val_size;
 	ulong line_addr = show_ahead_newline_addr;
-	DMA_WriteReq wr_req;
+	DMA_WriteReq_Compressed wr_req_compressed;
 	if (!put_newline_data.req.has_last) {
-	  wr_req.req.address = (put_newline_data.req.hash1 << 6) + line_start_addr + 32;
+	  wr_req_compressed.address = (put_newline_data.req.hash1 << 6) + line_start_addr + 32;
 	}
 	else {
-	  wr_req.req.address = (put_newline_data.req.hash1 << 5) + slab_start_addr + 32;
+	  wr_req_compressed.address = (put_newline_data.req.hash1 << 5) + slab_start_addr + 32;
 	}
-	wr_req.req.size = 32;
-	wr_req.req.data = put_newline_data.half_line;
-	wr_req.req.data.w = ((wr_req.req.data.w >> 32) << 32) | (((line_addr - slab_start_addr) >> 5) << 2) | (1);
+	wr_req_compressed.size = 32;
+	wr_req_compressed.data = put_newline_data.half_line;
+	wr_req_compressed.data.w = ((wr_req_compressed.data.w >> 32) << 32) | (((line_addr - slab_start_addr) >> 5) << 2) | (1);
 	bool dummy;
-	dummy = write_channel_nb_altera(hashtable_put_newline_dma_wr_req, wr_req.raw);
+	dummy = write_channel_nb_altera(hashtable_put_newline_dma_wr_req, wr_req_compressed);
 	assert(dummy);
 	put_newline_data.req.has_last = true;
 	put_newline_data.req.hash1 = (line_addr - slab_start_addr) >> 5;

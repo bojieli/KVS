@@ -27,47 +27,56 @@ hashtable_get_array_req_generator() {
       cnt ++;
       uchar cnt_in_char_size;
       uchar cnt_in_char[16];
-      if (cnt / 10ULL == 0) {
+
+      ushort d0 = cnt;
+      ushort d1 = d0 >> 4;
+      ushort d2 = d1 >> 4;
+      ushort d3 = d2 >> 4;
+
+      ushort m0 = d0 & 15;
+      ushort m1 = d1 & 15;
+      ushort m2 = d2 & 15;
+      ushort m3 = d3 & 15;      
+      
+      if (d1 == 0) {
 	cnt_in_char_size = 1;
-	cnt_in_char[0] = cnt;
+	cnt_in_char[0] = d0;
       }
-      else if (cnt / 100ULL == 0) {
+      else if (d2 == 0) {
 	cnt_in_char_size = 2;
-	cnt_in_char[1] = cnt % 10;
-	cnt_in_char[0] = cnt / 10;
+	cnt_in_char[1] = m0;
+	cnt_in_char[0] = d1;
       }
-      else if (cnt / 1000ULL == 0) {
+      else if (d3 == 0) {
 	cnt_in_char_size = 3;
-	cnt_in_char[2] = cnt % 10;
-	cnt_in_char[1] = (cnt / 10) % 10;
-	cnt_in_char[0] = cnt / 100;
-      }
-      else if (cnt / 10000ULL == 0) {
-	cnt_in_char_size = 4;
-	cnt_in_char[3] = cnt % 10;
-	cnt_in_char[2] = (cnt / 10) % 10;
-	cnt_in_char[1] = (cnt / 100) % 10;
-	cnt_in_char[0] = cnt / 1000;
+	cnt_in_char[2] = m0;
+	cnt_in_char[1] = m1;
+	cnt_in_char[0] = d2;
       }
       else {
-	cnt_in_char_size = 5;
-	cnt_in_char[4] = cnt % 10;
-	cnt_in_char[3] = (cnt / 10) % 10;
-	cnt_in_char[2] = (cnt / 100) % 10;
-	cnt_in_char[1] = (cnt / 1000) % 10;
-	cnt_in_char[0] = cnt / 10000;
+	cnt_in_char_size = 4;
+	cnt_in_char[3] = m0;
+	cnt_in_char[2] = m1;
+	cnt_in_char[1] = m2;
+	cnt_in_char[0] = d3;
       }
-      
+
       GetReq req;
       req.is_array_first = false;
       req.net_meta = info.net_meta;
       req.key_size = info.key_size + 1;
+
+#define unroll_bs(idx)							\
+      if (idx == info.key_size && i >= idx && i - idx < cnt_in_char_size) { \
+	key_slice[i] = cnt_in_char[i - idx] + '0';			\
+      }
+      
 #pragma unroll
       for (int i = 0; i < 32; i ++) {
-	if (i >= info.key_size && i - info.key_size < cnt_in_char_size) {
-	  key_slice[i] = cnt_in_char[i - info.key_size] + '0';
-	}
+	UNROLL_2_to_31;
       }
+#undef unroll_bs      
+      
       ulong tmp[4];
 #pragma unroll
       for (int i = 0; i < 4; i ++) {

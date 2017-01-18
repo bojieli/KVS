@@ -149,6 +149,7 @@ hashtable_add_adder() {
 	  }
 	}
 	else {
+
 #pragma unroll
 	  for (int i = 0; i < 64; i ++) {
 	    if (i >= 2 + parsed.key_size && i < 2 + parsed.key_size + val_in_uchar_idx) {
@@ -272,7 +273,12 @@ hashtable_add_adder() {
     }
 
     if (should_write_hashtable_add_offline_update_slab_dma_wr_req) {
-      bool dummy = write_channel_nb_altera(hashtable_add_offline_update_slab_dma_wr_req, wr_req.raw);
+      DMA_WriteReq_Compressed wr_req_compressed;
+      wr_req_compressed.address = wr_req.req.address;
+      wr_req_compressed.size = wr_req.req.size;
+      wr_req_compressed.data = wr_req.req.data;
+      
+      bool dummy = write_channel_nb_altera(hashtable_add_offline_update_slab_dma_wr_req, wr_req_compressed);
       assert(dummy);
     }
 

@@ -9,7 +9,7 @@ typedef struct DmaContext {
 }DmaContext;
 
 typedef struct DmaReadReqWithId {
-  DMA_ReadReq req;
+  DMA_ReadReq_Compressed req;
   uchar id;
 }DmaReadReqWithId;
 
@@ -104,12 +104,6 @@ typedef struct ArrayAddReqInfo {
   uint delta;
   uchar key_size;
 }ArrayAddReqInfo;
-
-typedef struct Ulong16 {
-  ulong8 x;
-  ulong8 y;
-  bool valid2;
-}Ulong16;
 
 typedef struct PutOfflineType {
   PutReq req;

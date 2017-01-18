@@ -17,18 +17,20 @@ hashtable_del_line_fetcher() {
       read_from_input = false;
     }
     if (read_del_req) {
-      DMA_ReadReq rd_req;
+      DMA_ReadReq_Compressed rd_req_compressed;
       if (read_from_input) {
-	rd_req.req.address = (req.hash1 << 6) + line_start_addr;
+	rd_req_compressed.address = (req.hash1 << 6) + line_start_addr;
 	req.has_last = false;
       }
       else {
-	rd_req.req.address = (req.hash1 << 5) + slab_start_addr;
+	rd_req_compressed.address = (req.hash1 << 5) + slab_start_addr;
 	req.has_last = true;
       }
-      rd_req.req.size = 64;
-      write_channel_altera(line_fetcher_del_dma_rd_req, rd_req.raw);
-      write_channel_altera(fetching_del_req, req);
+      rd_req_compressed.size = 64;
+      bool dummy = write_channel_nb_altera(line_fetcher_del_dma_rd_req, rd_req_compressed);
+      assert(dummy);
+      dummy = write_channel_nb_altera(fetching_del_req, req);
+      assert(dummy);
     }
   }
 }

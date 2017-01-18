@@ -26,6 +26,7 @@
 #include "../inc/constant.hpp"
 #include "../inc/datatype.hpp"
 #include "../inc/hashfunc.hpp"
+#include "../inc/unroll.hpp"
 /**********************************/
 
 /**********************************/
@@ -73,6 +74,16 @@
 #include "hashtable/put/line_fetcher.cpp"
 #include "hashtable/put/comparator.cpp"
 #include "hashtable/put/newline_handler.cpp"
+/**********************************/
+
+/**********************************/
+#include "hashtable/add/comparator.cpp"
+#include "hashtable/add/line_fetcher.cpp"
+#include "hashtable/add/array_req_generator.cpp"
+#include "hashtable/add/offline_handler.cpp"
+#include "hashtable/add/adder.cpp"
+#include "hashtable/add/res_merger.cpp"
+#include "hashtable/add/dma_wr_req_merger.cpp"
 /**********************************/
 
 /**********************************/
@@ -242,7 +253,6 @@ void host_dma_simulator() {
 	rd_req.req.size -= 8;
 	if (cnt == 0) {
 	  DMA_ReadRes rd_res;
-	  rd_res.res.size = 32;
 	  rd_res.res.data = data;
 	  write_channel_altera(dma_rd_res, rd_res.raw);
 	  data.x = data.y = data.z = data.w = 0;
@@ -250,7 +260,6 @@ void host_dma_simulator() {
       }
       if (cnt != 0) {
 	DMA_ReadRes rd_res;
-	rd_res.res.size = (cnt << 3);
 	rd_res.res.data = data;
 	write_channel_altera(dma_rd_res, rd_res.raw);
       }
@@ -451,7 +460,7 @@ void test() {
   put_req.val.z = 0x8829486500000000;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -470,7 +479,7 @@ void test() {
   get_req.hash1 = hash_func1(&get_req.key);
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
-  usleep(10000);
+  usleep(100000);
   write_channel_altera(input_get_req, get_req);
   
   get_res = read_channel_altera(output_get_res);
@@ -509,7 +518,7 @@ void test() {
   del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
   
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -544,7 +553,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -593,7 +602,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.key_size == 6);
@@ -641,7 +650,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -666,7 +675,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -690,7 +699,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -714,7 +723,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -738,7 +747,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -762,7 +771,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -781,7 +790,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -800,7 +809,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -819,7 +828,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
     
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -838,7 +847,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -857,7 +866,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -876,7 +885,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -895,7 +904,7 @@ void test() {
   del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -914,7 +923,7 @@ void test() {
   del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -933,7 +942,7 @@ void test() {
   del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -952,7 +961,7 @@ void test() {
   del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -971,7 +980,7 @@ void test() {
   del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -990,7 +999,7 @@ void test() {
   del_req.hash2 = hash_func2(&get_req.key);
   del_req.has_last = false;
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
   del_res = read_channel_altera(output_del_res);
 
   assert(del_res.found);
@@ -1035,7 +1044,7 @@ void test() {
   put_req.val.z = 0x3710556193597700;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1078,7 +1087,7 @@ void test() {
   put_req.val.z = 0x9166751927697600;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1121,7 +1130,7 @@ void test() {
   put_req.val.z = 0x8451804551779500;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1146,7 +1155,7 @@ void test() {
   put_req.val.w = 0;
   put_req.val.z = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1189,7 +1198,7 @@ void test() {
   put_req.val.z = 0x3907379773001000;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1232,7 +1241,7 @@ void test() {
   put_req.val.z = 0x4887940091589400;
   put_req.val.w = 0; 
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1251,7 +1260,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1294,7 +1303,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1337,7 +1346,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1380,7 +1389,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1405,7 +1414,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1448,7 +1457,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1490,7 +1499,7 @@ void test() {
   del_req.hash1 = hash1bak;
   del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1509,7 +1518,7 @@ void test() {
   del_req.hash1 = hash1bak;
   del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1528,7 +1537,7 @@ void test() {
   del_req.hash1 = hash1bak;
   del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1547,7 +1556,7 @@ void test() {
   del_req.hash1 = hash1bak;
   del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1566,7 +1575,7 @@ void test() {
   del_req.hash1 = hash1bak;
   del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1585,7 +1594,7 @@ void test() {
   del_req.hash1 = hash1bak;
   del_req.hash2 = hash_func2(&del_req.key);
   write_channel_altera(input_del_req, del_req);
-  usleep(10000);
+  usleep(100000);
 
   del_res = read_channel_altera(output_del_res);
   assert(del_res.found);
@@ -1605,7 +1614,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1625,7 +1634,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1634,7 +1643,7 @@ void test() {
   assert(get_res.key.y == 0);
   assert(get_res.key.z == 0);
   assert(get_res.key.w == 0);
-
+  
   // get
   get_req.key_size = 7;
   get_req.key.x = 0x9217959687663200;
@@ -1645,7 +1654,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1665,7 +1674,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1685,7 +1694,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1705,7 +1714,7 @@ void test() {
   get_req.hash2 = hash_func2(&get_req.key);
   get_req.has_last = false;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
 
   get_res = read_channel_altera(output_get_res);
   assert(!get_res.found);
@@ -1744,7 +1753,7 @@ void test() {
   put_req.val.z = 0x8829486500000000;
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -1764,12 +1773,12 @@ void test() {
   put_req.val.w = 0x7982945692434864;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(10000);
+  usleep(100000);
   
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
   assert(put_res.key_size == req_key_size);
-  assert(put_res.key == req_key);  
+  assert(put_res.key == req_key);
 
   string2key("$arr", get_req.key_size, get_req.key);  
   req_key_size = get_req.key_size;
@@ -1779,7 +1788,7 @@ void test() {
   get_req.has_last = false;
   get_req.is_array_first = true;
   write_channel_altera(input_get_req, get_req);
-  usleep(10000);
+  usleep(100000);
   
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
@@ -1821,11 +1830,12 @@ void test() {
 
 int main() {
   ios::sync_with_stdio(false);
-  
+
   host_init();
   boost::thread t_host_routine(&host_routine);
+  
   boost::thread t_host_dma_simulator(&host_dma_simulator);
-
+  
   boost::thread t_dma_rd_manager(&dma_rd_manager);
   boost::thread t_dma_wr_manager(&dma_wr_manager);
   
@@ -1836,15 +1846,15 @@ int main() {
   boost::thread t_slab_dma_rd_req_merger(&slab_dma_rd_req_merger);
   boost::thread t_slab_dma_rd_handler(&slab_dma_rd_handler);
   boost::thread t_slab_dma_wr_handler(&slab_dma_wr_handler);
-  boost::thread t_slab_besides_return(&slab_besides_return);
+  boost::thread t_slab_besides_return(&slab_besides_return); 
   boost::thread t_slab_return(&slab_return);
-  
+
   boost::thread t_hashtable_get_comparator(&hashtable_get_comparator);
   boost::thread t_hashtable_get_line_fetcher(&hashtable_get_line_fetcher);
   boost::thread t_hashtable_get_offline_handler(&hashtable_get_offline_handler);
-  boost::thread t_hashtable_get_res_merger(&hashtable_get_res_merger);
   boost::thread t_hashtable_get_array_req_generator(&hashtable_get_array_req_generator);
-  
+  boost::thread t_hashtable_get_res_merger(&hashtable_get_res_merger);
+
   boost::thread t_hashtable_del_comparator(&hashtable_del_comparator);
   boost::thread t_hashtable_del_dma_wr_req_merger(&hashtable_del_dma_wr_req_merger);  
   boost::thread t_hashtable_del_slab_return_req_merger(&hashtable_del_slab_return_req_merger);
@@ -1856,8 +1866,15 @@ int main() {
   boost::thread t_hashtable_put_line_fetcher(&hashtable_put_line_fetcher);
   boost::thread t_hashtable_put_comparator(&hashtable_put_comparator);
   boost::thread t_hashtable_put_newline_handler(&hashtable_put_newline_handler);
-  
   boost::thread t_hashtable_line_fetcher_dma_rd_handler(&hashtable_line_fetcher_dma_rd_handler);
+
+  boost::thread t_hashtable_add_comparator(hashtable_add_comparator);
+  boost::thread t_hashtable_add_line_fetcher(hashtable_add_line_fetcher);
+  boost::thread t_hashtable_add_array_req_generator(hashtable_add_array_req_generator);
+  boost::thread t_hashtable_add_offline_handler(hashtable_add_offline_handler);
+  boost::thread t_hashtable_add_adder(hashtable_add_adder);
+  boost::thread t_hashtable_add_res_merger(hashtable_add_res_merger);
+  boost::thread t_hashtable_add_dma_wr_req_merger(hashtable_add_dma_wr_req_merger);
   
   boost::thread t_test(&test);
   
@@ -1865,5 +1882,4 @@ int main() {
 
   return 0;
 }
-
 #endif

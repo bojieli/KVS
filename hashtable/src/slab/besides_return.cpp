@@ -18,8 +18,8 @@ slab_besides_return() {
   ulong host_slab_available_table_base_addr[SLAB_BIN_COUNT];
   
   ushort slab_return_table_size[SLAB_BIN_COUNT];
-  ulong host_slab_return_table_tail_ptr_offset[SLAB_BIN_COUNT];
-  ulong host_slab_return_table_tail_ptr_offset_mask[SLAB_BIN_COUNT];
+  uint host_slab_return_table_tail_ptr_offset[SLAB_BIN_COUNT];
+  uint host_slab_return_table_tail_ptr_offset_mask[SLAB_BIN_COUNT];
   ulong host_slab_return_table_base_addr[SLAB_BIN_COUNT];
 
   ushort slab_cache_table_size[SLAB_BIN_COUNT]; 
@@ -52,21 +52,32 @@ slab_besides_return() {
   
   ulong slab_end_addr = slab_start_addr + (1ULL << 35);
 
-  write_channel_altera(init_hashtable_get_comparator, slab_start_addr);
-  write_channel_altera(init_slab_return, slab_start_addr);
+  dummy = write_channel_nb_altera(init_hashtable_get_comparator, slab_start_addr);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_slab_return, slab_start_addr);
+  assert(dummy);
 
   ulong2 tmp;  
   tmp.x = slab_start_addr;
   tmp.y = slab_end_addr;
-  write_channel_altera(init_hashtable_del_comparator, tmp);
-  write_channel_altera(init_hashtable_put_comparator, tmp);
-  write_channel_altera(init_hashtable_add_comparator, tmp);
-  write_channel_altera(init_hashtable_put_offline_handler, tmp);
-  write_channel_altera(init_hashtable_del_line_fetcher, tmp);
-  write_channel_altera(init_hashtable_get_line_fetcher, tmp);
-  write_channel_altera(init_hashtable_put_line_fetcher, tmp);
-  write_channel_altera(init_hashtable_add_line_fetcher, tmp);
-  write_channel_altera(init_hashtable_put_newline_handler, tmp);
+  dummy = write_channel_nb_altera(init_hashtable_del_comparator, tmp);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_hashtable_put_comparator, tmp);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_hashtable_add_comparator, tmp);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_hashtable_put_offline_handler, tmp);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_hashtable_del_line_fetcher, tmp);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_hashtable_get_line_fetcher, tmp);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_hashtable_put_line_fetcher, tmp);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_hashtable_add_line_fetcher, tmp);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_hashtable_put_newline_handler, tmp);
+  assert(dummy);
   
   // array init
 #pragma unroll
@@ -126,7 +137,8 @@ slab_besides_return() {
 
       if (auto_return_mode[i]) {
 	slab_return_table_size[i] -= 8;
-	DMA_WriteReq dma_wr_req;	
+	DMA_WriteReq dma_wr_req;
+	DMA_WriteReq_Compressed dma_wr_req_compressed;
 	if (auto_return_mode_first) {
 	  ulong base_addr =
 	    (i == 0) ? host_slab_return_table_base_addr[0] :
@@ -139,7 +151,11 @@ slab_besides_return() {
 	  dma_wr_req.req.size = SLAB_RETURN_TO_HOST_SIZE << 2;
 	}
 	dma_wr_req.req.data = val_slab_return_table[i];
-	write_channel_altera(slab_bin_dma_wr_req[i], dma_wr_req.raw);
+	dma_wr_req_compressed.data = dma_wr_req.req.data;
+	dma_wr_req_compressed.address = dma_wr_req.req.address;
+	dma_wr_req_compressed.size = dma_wr_req.req.size;
+	bool dummy = write_channel_nb_altera(slab_bin_dma_wr_req[i], dma_wr_req_compressed);
+	assert(dummy);
 	auto_return_mode[i] -= 8;
 	host_slab_return_table_tail_ptr_offset[i] += 8;
 	host_slab_return_table_tail_ptr_offset[i] &= host_slab_return_table_tail_ptr_offset_mask[i];
@@ -171,7 +187,10 @@ slab_besides_return() {
 		host_slab_available_table_head_ptr_offset[i] += SLAB_FETCH_FROM_HOST_SIZE;
 		host_slab_available_table_head_ptr_offset[i] &= host_slab_available_table_head_ptr_offset_mask[i];
 		bool dummy;
-		dummy = write_channel_nb_altera(slab_bin_dma_rd_req[i], dma_rd_req.raw);
+		DMA_ReadReq_Compressed dma_rd_req_compressed;
+		dma_rd_req_compressed.address = dma_rd_req.req.address;
+		dma_rd_req_compressed.size = dma_rd_req.req.size;
+		dummy = write_channel_nb_altera(slab_bin_dma_rd_req[i], dma_rd_req_compressed);
 		assert(dummy);
 		slab_cache_table_size[i] += SLAB_FETCH_FROM_HOST_SIZE;
 	      }
@@ -280,10 +299,12 @@ slab_besides_return() {
 	}
       }
       if (have_grant_signal) {
-	write_channel_altera(slab_besides_return_res, grant_signal.Sig.LParam[0]);
+	dummy = write_channel_nb_altera(slab_besides_return_res, grant_signal.Sig.LParam[0]);
+	assert(dummy);
       }
       if (have_sync_signal) {
-	write_channel_altera(slab_besides_return_sync, sync_signal.raw);
+	dummy = write_channel_nb_altera(slab_besides_return_sync, sync_signal.raw);
+	assert(dummy);
       }
     }
   }

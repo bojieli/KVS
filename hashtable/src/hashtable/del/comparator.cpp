@@ -1,18 +1,32 @@
-_CL_VOID
+ _CL_VOID
 hashtable_del_comparator() {
   ulong2 init_data = read_channel_altera(init_hashtable_del_comparator);
   ulong slab_start_addr = init_data.x;
   ulong line_start_addr = init_data.y;
     
   while (1) {
+    bool should_write_slab_return_req_offline_slab = false;
+    ClSignal val_write_slab_return_req_offline_slab;
+
+    bool should_write_slab_return_req_line = false;
+    ClSignal val_write_slab_return_req_line;
+
+    bool should_write_hashtable_del_dma_wr_req_0 = false;
+    DMA_WriteReq_Compressed val_write_hashtable_del_dma_wr_req_0;
+
+    bool should_write_return_del_req = false;
+    DelReq val_write_return_del_req;
+
+    bool should_write_output_del_res = false;
+    DelRes val_write_output_del_res;
+    
+    bool should_write_hashtable_del_dma_wr_req = false;
+    DMA_WriteReq_Compressed val_write_hashtable_del_dma_wr_req;
+    
     ulong8 line;
     bool read_line;
     line = read_channel_nb_altera(line_fetcher_del_dma_rd_res, &read_line);
     if (read_line) {
-      bool should_write_output_del_res = false;
-      DelRes val_write_output_del_res;
-      bool should_write_hashtable_del_dma_wr_req = false;
-      ulong8 val_write_hashtable_del_dma_wr_req;
       
       bool dummy;
       DelReq req = read_channel_nb_altera(fetching_del_req, &dummy);
@@ -307,20 +321,20 @@ hashtable_del_comparator() {
 		      (((ulong)data_to_write[6 + (i << 3)]) << 8) |
 		      (((ulong)data_to_write[7 + (i << 3)]) << 0);
 		  }
-		  DMA_WriteReq wr_req;
-		  wr_req.req.data.x = wr_data_in_ulong[0];
-		  wr_req.req.data.y = wr_data_in_ulong[1];
-		  wr_req.req.data.z = wr_data_in_ulong[2];
-		  wr_req.req.data.w = wr_data_in_ulong[3];
-		  wr_req.req.size = 32;
+		  DMA_WriteReq_Compressed wr_req_compressed;
+		  wr_req_compressed.data.x = wr_data_in_ulong[0];
+		  wr_req_compressed.data.y = wr_data_in_ulong[1];
+		  wr_req_compressed.data.z = wr_data_in_ulong[2];
+		  wr_req_compressed.data.w = wr_data_in_ulong[3];
+		  wr_req_compressed.size = 32;
 		  if (!req.has_last) {
-		    wr_req.req.address = line_start_addr + (req.hash1 << 6) + 32;
+		    wr_req_compressed.address = line_start_addr + (req.hash1 << 6) + 32;
 		  }
 		  else {
-		    wr_req.req.address = slab_start_addr + (req.hash1 << 5) + 32;
+		    wr_req_compressed.address = slab_start_addr + (req.hash1 << 5) + 32;
 		  }
 		  should_write_hashtable_del_dma_wr_req = true;
-		  val_write_hashtable_del_dma_wr_req = wr_req.raw;
+		  val_write_hashtable_del_dma_wr_req = wr_req_compressed;
 
 		  should_write_output_del_res = true;
 		  val_write_output_del_res.found = true;
@@ -401,20 +415,20 @@ hashtable_del_comparator() {
 	    (((ulong)data_to_write[6 + (i << 3)]) << 8) |
 	    (((ulong)data_to_write[7 + (i << 3)]) << 0);
 	}
-	DMA_WriteReq wr_req;
-	wr_req.req.data.x = wr_data_in_ulong[0];
-	wr_req.req.data.y = wr_data_in_ulong[1];
-	wr_req.req.data.z = wr_data_in_ulong[2];
-	wr_req.req.data.w = wr_data_in_ulong[3];
- 	wr_req.req.size = 32;
+	DMA_WriteReq_Compressed wr_req_compressed;
+	wr_req_compressed.data.x = wr_data_in_ulong[0];
+	wr_req_compressed.data.y = wr_data_in_ulong[1];
+	wr_req_compressed.data.z = wr_data_in_ulong[2];
+	wr_req_compressed.data.w = wr_data_in_ulong[3];
+ 	wr_req_compressed.size = 32;
 	if (!req.has_last) {
-	  wr_req.req.address = line_start_addr + (req.hash1 << 6) + 32;
+	  wr_req_compressed.address = line_start_addr + (req.hash1 << 6) + 32;
 	}
 	else {
-	  wr_req.req.address = slab_start_addr + (req.hash1 << 5) + 32;
+	  wr_req_compressed.address = slab_start_addr + (req.hash1 << 5) + 32;
 	}
 	should_write_hashtable_del_dma_wr_req = true;
-	val_write_hashtable_del_dma_wr_req = wr_req.raw;
+	val_write_hashtable_del_dma_wr_req = wr_req_compressed;
 
 	should_write_output_del_res = true;
 	val_write_output_del_res.found = true;
@@ -426,28 +440,32 @@ hashtable_del_comparator() {
 	ClSignal signal;
 	signal.Sig.LParam[0] = 1 << (offline_found_slab_type + 5);
 	signal.Sig.LParam[1] = offline_found_val_addr + slab_start_addr;
-	bool dummy = write_channel_nb_altera(slab_return_req_offline_slab, signal.raw);
-	assert(dummy);
+	
+	should_write_slab_return_req_offline_slab = true;
+	val_write_slab_return_req_offline_slab = signal;
 
 	if (data_to_write[18] == 0 && data_to_write[19] == 0 && data_to_write[20] == 0 && 
 	    data_to_write[21] == 0 && data_to_write[22] == 0 && data_to_write[23] == 0 && (data_to_write[24] >> 6) == 0 && req.has_last) {
 	  // return this line
 	  signal.Sig.LParam[0] = 64;
 	  signal.Sig.LParam[1] = (req.hash1 << 6) + slab_start_addr;
-	  bool dummy = write_channel_nb_altera(slab_return_req_line, signal.raw);
-	  assert(dummy);
+
+	  should_write_slab_return_req_line = true;
+	  val_write_slab_return_req_line = signal;
+	  
 	  req.last_half_line_data.w = ((req.last_half_line_data.w >> 32) << 32) | (wr_data_in_ulong[3] & 0xFFFFFFFF);
-	  DMA_WriteReq wr_req;
+	  DMA_WriteReq_Compressed wr_req_compressed;
 	  if (!req.last_has_last) {
-	    wr_req.req.address = (req.last_line_addr << 6) + line_start_addr + 32;
+	    wr_req_compressed.address = (req.last_line_addr << 6) + line_start_addr + 32;
 	  }
 	  else {
-	    wr_req.req.address = (req.last_line_addr << 5) + slab_start_addr + 32;
+	    wr_req_compressed.address = (req.last_line_addr << 5) + slab_start_addr + 32;
 	  }
-	  wr_req.req.size = 32;
-	  wr_req.req.data = req.last_half_line_data;
-	  dummy = write_channel_nb_altera(hashtable_del_dma_wr_req_0, wr_req.raw);
-	  assert(dummy);
+	  wr_req_compressed.size = 32;
+	  wr_req_compressed.data = req.last_half_line_data;
+
+	  should_write_hashtable_del_dma_wr_req_0 = true;
+	  val_write_hashtable_del_dma_wr_req_0 = wr_req_compressed;
 	}
 	
       }
@@ -480,8 +498,8 @@ hashtable_del_comparator() {
 	  line_in_uchar[63];
 	req.hash1 >>= 2; // remove the last 2b(valid bit + reserved bit)
 	req.has_last = true;
-	bool dummy = write_channel_nb_altera(return_del_req, req);
-	assert(dummy);
+	should_write_return_del_req = true;
+	val_write_return_del_req = req;
       }
       else {
 	// cannot find
@@ -504,6 +522,27 @@ hashtable_del_comparator() {
 	bool dummy = write_channel_nb_altera(hashtable_del_dma_wr_req_1, val_write_hashtable_del_dma_wr_req);
 	assert(dummy);
       }
+
+      if (should_write_slab_return_req_offline_slab) {
+	bool dummy = write_channel_nb_altera(slab_return_req_offline_slab, val_write_slab_return_req_offline_slab.raw);
+	assert(dummy);
+      }
+
+      if (should_write_slab_return_req_line) {
+	bool dummy = write_channel_nb_altera(slab_return_req_line, val_write_slab_return_req_line.raw);
+	assert(dummy);
+      }
+      
+      if (should_write_hashtable_del_dma_wr_req_0) {
+	bool dummy = write_channel_nb_altera(hashtable_del_dma_wr_req_0, val_write_hashtable_del_dma_wr_req_0);
+	assert(dummy);
+      }
+
+      if (should_write_return_del_req) {
+	bool dummy = write_channel_nb_altera(return_del_req, val_write_return_del_req);
+	assert(dummy);
+      }
+      
     }      
   }
 }

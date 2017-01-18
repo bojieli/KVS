@@ -5,94 +5,60 @@ hashtable_put_line_fetcher() {
   ulong slab_start_addr = init.x;
   ulong line_start_addr = init.y;
 
-  bool is_valid_return_put_req = false;
-  PutReq show_ahead_return_put_req;
-
-  bool is_valid_input_put_req = false;
-  PutReq show_ahead_input_put_req;
-
-  bool is_valid_newline_put_req = false;
-  PutReq show_ahead_newline_put_req;
-
   ushort inflight_val_size_left = 0;
   uchar inflight_rd_req_id = 0;
 
   while (1) {
-    if (!is_valid_return_put_req) {
-      show_ahead_return_put_req = read_channel_nb_altera(return_put_req, &is_valid_return_put_req);
-    }
-
-    if (!is_valid_input_put_req) {
-      show_ahead_input_put_req = read_channel_nb_altera(input_put_req, &is_valid_input_put_req);
-    }
-
-    if (!is_valid_newline_put_req) {
-      show_ahead_newline_put_req = read_channel_nb_altera(newline_put_req, &is_valid_newline_put_req);
-    }
-
-    if (is_valid_return_put_req || is_valid_input_put_req || is_valid_newline_put_req) {
-      if (!inflight_val_size_left) {
-	bool has_req = false;
-	PutReq req;
-	if (is_valid_return_put_req) {
-	  req = show_ahead_return_put_req;
-	  inflight_val_size_left = req.val_size;
-	  inflight_rd_req_id = 0;
-	  has_req = true;
-	}
-	else if (is_valid_input_put_req) {
-	  req = show_ahead_input_put_req;
-	  inflight_val_size_left = req.val_size;
-	  inflight_rd_req_id = 1;
-	  has_req = true;
-	}
-	else if (is_valid_newline_put_req) {
-	  req = show_ahead_newline_put_req;
-	  inflight_val_size_left = req.val_size;
-	  inflight_rd_req_id = 2;
-	  has_req = true;
-	}
-      
-	if (has_req) {
-	  DMA_ReadReq rd_req;
-	  if (!req.has_last) {
-	    rd_req.req.address = (req.hash1 << 6) + line_start_addr;
-	  }
-	  else {
-	    rd_req.req.address = (req.hash1 << 5) + slab_start_addr;	
-	  }
-	  rd_req.req.size = 64;      
-	  write_channel_altera(line_fetcher_put_dma_rd_req, rd_req.raw);
-	}
+    bool read_put_req = false;
+    PutReq put_req;
+    
+    if (!read_put_req && (inflight_rd_req_id == 0 || inflight_rd_req_id == 1)) {
+      put_req = read_channel_nb_altera(return_put_req, &read_put_req);
+      if (read_put_req) {
+	inflight_rd_req_id = 1;
       }
+    }
 
-      if (inflight_val_size_left) {
-	PutReq req;
-	if (inflight_rd_req_id == 0) {
-	  assert(is_valid_return_put_req);
-	  is_valid_return_put_req = false;
-	  req = show_ahead_return_put_req;
-	}
-	else if (inflight_rd_req_id == 1) {
-	  assert(is_valid_input_put_req);
-	  is_valid_input_put_req = false;
-	  req = show_ahead_input_put_req;
-	}
-	else if (inflight_rd_req_id == 2) {
-	  assert(is_valid_newline_put_req);
-	  is_valid_newline_put_req = false;
-	  req = show_ahead_newline_put_req;
-	}
+    if (!read_put_req && (inflight_rd_req_id == 0 || inflight_rd_req_id == 2)) {
+      put_req = read_channel_nb_altera(input_put_req, &read_put_req);
+      if (read_put_req) {
+	inflight_rd_req_id = 2;
+      }
+    }
 
-	if (inflight_val_size_left > 32) {
-	  inflight_val_size_left -= 32;
+    if (!read_put_req && (inflight_rd_req_id == 0 || inflight_rd_req_id == 3)) {
+      put_req = read_channel_nb_altera(newline_put_req, &read_put_req);
+      if (read_put_req) {
+	inflight_rd_req_id = 3;
+      }
+    }
+
+    if (read_put_req) {
+      if (!inflight_val_size_left) {
+	inflight_val_size_left = put_req.val_size;
+	DMA_ReadReq_Compressed rd_req_compressed;
+	if (!put_req.has_last) {
+	  rd_req_compressed.address = (put_req.hash1 << 6) + line_start_addr;
 	}
 	else {
-	  inflight_val_size_left = 0;
+	  rd_req_compressed.address = (put_req.hash1 << 5) + slab_start_addr;	
 	}
-	bool dummy = write_channel_nb_altera(fetching_put_req, req);
+	rd_req_compressed.size = 64;      
+	bool dummy = write_channel_nb_altera(line_fetcher_put_dma_rd_req, rd_req_compressed);
 	assert(dummy);
       }
+      
+      if (inflight_val_size_left > 32) {
+	inflight_val_size_left -= 32;
+      }
+      else {
+	inflight_val_size_left = 0;
+	inflight_rd_req_id = 0;
+      }
+      bool dummy = write_channel_nb_altera(fetching_put_req, put_req);
+      assert(dummy);
     }
   }  
 }
+
+

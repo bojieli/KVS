@@ -7,31 +7,31 @@ hashtable_line_fetcher_dma_rd_handler() {
   bool state = false;
   
   while (1) {    // issue request
-    DMA_ReadReq rd_req;
+    DMA_ReadReq_Compressed rd_req_compressed;
     bool read_rd_req;
     DmaContext context;
-    rd_req.raw = read_channel_nb_altera(line_fetcher_get_dma_rd_req, &read_rd_req);
+    rd_req_compressed = read_channel_nb_altera(line_fetcher_get_dma_rd_req, &read_rd_req);
     if (read_rd_req) {
       context.id = 0;
-      context.size = rd_req.req.size;
+      context.size = rd_req_compressed.size;
     }
     else {
-      rd_req.raw = read_channel_nb_altera(line_fetcher_del_dma_rd_req, &read_rd_req);
+      rd_req_compressed = read_channel_nb_altera(line_fetcher_del_dma_rd_req, &read_rd_req);
       if (read_rd_req) {
 	context.id = 1;
-	context.size = rd_req.req.size;
+	context.size = rd_req_compressed.size;
       }
       else {
-	rd_req.raw = read_channel_nb_altera(line_fetcher_put_dma_rd_req, &read_rd_req);
+	rd_req_compressed = read_channel_nb_altera(line_fetcher_put_dma_rd_req, &read_rd_req);
 	if (read_rd_req) {
 	  context.id = 2;
-	  context.size = rd_req.req.size;
+	  context.size = rd_req_compressed.size;
 	}
 	else {
-	  rd_req.raw = read_channel_nb_altera(line_fetcher_add_dma_rd_req, &read_rd_req);
+	  rd_req_compressed = read_channel_nb_altera(line_fetcher_add_dma_rd_req, &read_rd_req);
 	  if (read_rd_req) {
 	    context.id = 3;
-	    context.size = rd_req.req.size;
+	    context.size = rd_req_compressed.size;
 	  }
 	  else {
 	    // ...
@@ -41,7 +41,7 @@ hashtable_line_fetcher_dma_rd_handler() {
     }
 
     if (read_rd_req) {
-      write_channel_altera(line_fetcher_dma_rd_req, rd_req.raw);
+      write_channel_altera(line_fetcher_dma_rd_req, rd_req_compressed);
       bool dummy = write_channel_nb_altera(line_fetcher_dma_rd_handler_context, context);
       assert(dummy);
     }

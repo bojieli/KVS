@@ -18,7 +18,7 @@ hashtable_put_comparator() {
     bool read_line;
     bool should_write_put_inline_dma_wr_req_double = false;
     bool should_write_return_put_req = false;
-    Ulong16 val_write_put_inline_dma_wr_req_double;
+    DMA_WriteReq_Compressed_Double val_write_put_inline_dma_wr_req_double;
     PutReq val_write_return_put_req;
     bool should_write_put_inline_res = false;
     PutRes val_write_put_inline_res;
@@ -275,17 +275,17 @@ hashtable_put_comparator() {
 	      }
 	      
 	      should_write_put_inline_dma_wr_req_double = true;
-	      DMA_WriteReq wr_req;
+	      DMA_WriteReq_Compressed wr_req_compressed;
 	      // update metadata && data
 	      if (put_idx <= 6) {
 		// need double dma writes
 		if (!req.has_last) {
-		  wr_req.req.address = ((req.hash1) << 6) + line_start_addr;
+		  wr_req_compressed.address = ((req.hash1) << 6) + line_start_addr;
 		}
 		else {
-		  wr_req.req.address = ((req.hash1) << 5) + slab_start_addr; 
+		  wr_req_compressed.address = ((req.hash1) << 5) + slab_start_addr; 
 		}
-		wr_req.req.size = 64;
+		wr_req_compressed.size = 64;
 		ulong tmp[8];
 #pragma unroll	      
 		for (int i = 0; i < 8; i ++) {
@@ -299,31 +299,30 @@ hashtable_put_comparator() {
 		    (((ulong)data[6 + (i << 3)]) << 8) |
 		    (((ulong)data[7 + (i << 3)]) << 0);
 		}
-		wr_req.req.data.x = tmp[0];
-		wr_req.req.data.y = tmp[1];
-		wr_req.req.data.z = tmp[2];
-		wr_req.req.data.w = tmp[3];		
-		val_write_put_inline_dma_wr_req_double.x = wr_req.raw;
+		wr_req_compressed.data.x = tmp[0];
+		wr_req_compressed.data.y = tmp[1];
+		wr_req_compressed.data.z = tmp[2];
+		wr_req_compressed.data.w = tmp[3];		
+		val_write_put_inline_dma_wr_req_double.x = wr_req_compressed;
 
-		wr_req.req.address = 0;
-		wr_req.req.size = 0;
-		wr_req.req.data.x = tmp[4];
-		wr_req.req.data.y = tmp[5];
-		wr_req.req.data.z = tmp[6];
-		wr_req.req.data.w = tmp[7];
-		val_write_put_inline_dma_wr_req_double.y = wr_req.raw;
+		wr_req_compressed.address = 0;
+		wr_req_compressed.size = 0;
+		wr_req_compressed.data.x = tmp[4];
+		wr_req_compressed.data.y = tmp[5];
+		wr_req_compressed.data.z = tmp[6];
+		wr_req_compressed.data.w = tmp[7];
+		val_write_put_inline_dma_wr_req_double.y = wr_req_compressed;
 		val_write_put_inline_dma_wr_req_double.valid2 = true;
 	      }
 	      else {
 		// can coalesce into single dma write
 		if (!req.has_last) {
-		  wr_req.req.address = ((req.hash1) << 6) + line_start_addr + 32;
-		  // cout << hex << wr_req.req.address << " " << wr_req.req.data.w << endl;
+		  wr_req_compressed.address = ((req.hash1) << 6) + line_start_addr + 32;
 		}
 		else {
-		  wr_req.req.address = ((req.hash1) << 5) + slab_start_addr + 32;
+		  wr_req_compressed.address = ((req.hash1) << 5) + slab_start_addr + 32;
 		}
-		wr_req.req.size = 32;
+		wr_req_compressed.size = 32;
 		ulong tmp[4];
 #pragma unroll	      	      
 		for (int i = 0; i < 4; i ++) {
@@ -337,16 +336,12 @@ hashtable_put_comparator() {
 		    (((ulong)data[32 + 6 + (i << 3)]) << 8) |
 		    (((ulong)data[32 + 7 + (i << 3)]) << 0);
 		}
-		wr_req.req.data.x = tmp[0];
-		wr_req.req.data.y = tmp[1];
-		wr_req.req.data.z = tmp[2];
-		wr_req.req.data.w = tmp[3];
+		wr_req_compressed.data.x = tmp[0];
+		wr_req_compressed.data.y = tmp[1];
+		wr_req_compressed.data.z = tmp[2];
+		wr_req_compressed.data.w = tmp[3];
 		
-		val_write_put_inline_dma_wr_req_double.x = wr_req.raw;
-		ulong8 empty;
-		empty.hi.x = empty.hi.y = empty.hi.z = empty.hi.w =
-		  empty.lo.x = empty.lo.y = empty.lo.z = empty.lo.w = 0;
-		val_write_put_inline_dma_wr_req_double.y = empty;
+		val_write_put_inline_dma_wr_req_double.x = wr_req_compressed;
 		val_write_put_inline_dma_wr_req_double.valid2 = false;
 	      }
 

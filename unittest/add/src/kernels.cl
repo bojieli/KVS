@@ -26,6 +26,7 @@
 #include "../inc/constant.hpp"
 #include "../inc/datatype.hpp"
 #include "../inc/hashfunc.hpp"
+#include "../inc/unroll.hpp"
 /**********************************/
 
 /**********************************/
@@ -252,7 +253,6 @@ void host_dma_simulator() {
 	rd_req.req.size -= 8;
 	if (cnt == 0) {
 	  DMA_ReadRes rd_res;
-	  rd_res.res.size = 32;
 	  rd_res.res.data = data;
 	  write_channel_altera(dma_rd_res, rd_res.raw);
 	  data.x = data.y = data.z = data.w = 0;
@@ -260,7 +260,6 @@ void host_dma_simulator() {
       }
       if (cnt != 0) {
 	DMA_ReadRes rd_res;
-	rd_res.res.size = (cnt << 3);
 	rd_res.res.data = data;
 	write_channel_altera(dma_rd_res, rd_res.raw);
       }

@@ -2,31 +2,17 @@ _CL_VOID
 hashtable_get_comparator() {
   ulong slab_start_addr = read_channel_altera(init_hashtable_get_comparator);
 
-  bool is_valid_line_fetcher_get_dma_rd_res;
-  ulong8 show_ahead_line_fetcher_get_dma_rd_res;
-
-  bool is_valid_fetching_get_req;
-  GetReq show_ahead_fetching_get_req;
-  
   while (1) {
     ulong8 line;
-    bool read_line;
     GetReq req;
+    bool read_line_fetcher_get_dma_rd_res = false;
     
-    if (!is_valid_line_fetcher_get_dma_rd_res) {
-      show_ahead_line_fetcher_get_dma_rd_res = read_channel_nb_altera(line_fetcher_get_dma_rd_res, &is_valid_line_fetcher_get_dma_rd_res);     	
-    }
+    line = read_channel_nb_altera(line_fetcher_get_dma_rd_res, &read_line_fetcher_get_dma_rd_res);
 
-    if (!is_valid_fetching_get_req) {
-      show_ahead_fetching_get_req = read_channel_nb_altera(fetching_get_req, &is_valid_fetching_get_req);
-    }
-
-    if (is_valid_line_fetcher_get_dma_rd_res && is_valid_fetching_get_req) {      
-      is_valid_line_fetcher_get_dma_rd_res = false;
-      is_valid_fetching_get_req = false;
-
-      line = show_ahead_line_fetcher_get_dma_rd_res;
-      req = show_ahead_fetching_get_req;
+    if (read_line_fetcher_get_dma_rd_res) {
+      bool dummy;
+      req = read_channel_nb_altera(fetching_get_req, &dummy);
+      assert(dummy);
 
       ulong4 key = req.key;
       uchar line_in_uchar[64];

@@ -43,13 +43,13 @@ decl_channel(bool, 1, slab_init_finish);
 // slab/besides_return -> slab/dma_rd_handler
 decl_channel(DMA_ReadReq_Compressed, 1, slab_bin_dma_rd_req[SLAB_BIN_COUNT]);
 // slab/besides_return_req_merger -> slab/besides_return
-decl_channel(ulong8, 128, slab_besides_return_req);
+decl_channel(SlabRequest, 128, slab_besides_return_req);
 // pcie/rx -> slab/besides_return_req_merger
-decl_channel(ulong8, 128, host_slab_besides_return_req);
+decl_channel(SlabRequest, 128, host_slab_besides_return_req);
 // hashtable/put/comparator -> slab/besides_return_req_merger
-decl_channel(ulong8, 128, hashtable_put_offline_slab_req);
+decl_channel(SlabRequest, 128, hashtable_put_offline_slab_req);
 // hashtable/put/comparator -> hashtable/put/dma_wr_req_merger
-decl_channel(ulong8, 128, hashtable_put_newline_slab_req);
+decl_channel(SlabRequest, 128, hashtable_put_newline_slab_req);
 // slab/besides_return -> slab/besides_return_req_merger
 decl_channel(ulong, 128, slab_besides_return_res);
 // slab/besides_return_req_merger-> hashtable/put/newline_handler
@@ -57,11 +57,11 @@ decl_channel(ulong, 128, slab_besides_return_res_newline);
 // slab/besides_return_req_merger -> hashtable/put/offline_handler
 decl_channel(ulong, 128, slab_besides_return_res_offline);
 // src/hashtable/del/slab_return_req_merger -> src/slab/return
-decl_channel(ulong8, 128, slab_return_req);
+decl_channel(SlabReturn, 128, slab_return_req);
 // src/hashtable/del/comparator -> src/hashtable/del/slab_return_req_merger
-decl_channel(ulong8, 128, slab_return_req_offline_slab);
+decl_channel(SlabReturn, 128, slab_return_req_offline_slab);
 // src/hashtable/del/comparator -> src/hashtable/del/slab_return_req_merger 
-decl_channel(ulong8, 128, slab_return_req_line);
+decl_channel(SlabReturn, 128, slab_return_req_line);
 // slab/besides_return_req_merger -> slab/besides_return_req_merger
 decl_channel(uchar, 128, slab_besides_return_req_context);
 // slab/besides_return -> slab/return

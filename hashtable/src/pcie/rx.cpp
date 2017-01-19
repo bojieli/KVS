@@ -19,7 +19,11 @@ pcie_rx() {
 	  assert(dummy);
 	}
 	else {
-	  bool dummy = write_channel_nb_altera(host_slab_besides_return_req, signal); // for ptr sync signal from host
+	  ClSignal tmp;
+	  tmp.raw = signal;
+	  SlabRequest slabRequest;
+	  slabRequest.cmd = tmp.Sig.Cmd;
+	  bool dummy = write_channel_nb_altera(host_slab_besides_return_req, slabRequest); // for ptr sync signal from host
 	  assert(dummy);
 	}
       }

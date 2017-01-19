@@ -7,6 +7,16 @@ hashtable_line_fetcher_dma_rd_handler() {
   bool state = false;
   
   while (1) {    // issue request
+    bool should_write_line_fetcher_add_dma_rd_res = false;
+    bool should_write_line_fetcher_put_dma_rd_res = false;
+    bool should_write_line_fetcher_get_dma_rd_res = false;
+    bool should_write_line_fetcher_del_dma_rd_res = false;
+
+    ulong8 val_write_line_fetcher_add_dma_rd_res;
+    ulong8 val_write_line_fetcher_put_dma_rd_res;
+    ulong8 val_write_line_fetcher_get_dma_rd_res;
+    ulong8 val_write_line_fetcher_del_dma_rd_res;
+    
     DMA_ReadReq_Compressed rd_req_compressed;
     bool read_rd_req;
     DmaContext context;
@@ -75,8 +85,8 @@ hashtable_line_fetcher_dma_rd_handler() {
 	else {
 	  state = false;
 	  rd_res_in_ulong8.hi = rd_res;
-	  bool dummy = write_channel_nb_altera(line_fetcher_get_dma_rd_res, rd_res_in_ulong8);
-	  assert(dummy);
+	  should_write_line_fetcher_get_dma_rd_res = true;
+	  val_write_line_fetcher_get_dma_rd_res = rd_res_in_ulong8;
 	}
       }
       else if (inflight_rd_res_id == 1) {
@@ -87,8 +97,8 @@ hashtable_line_fetcher_dma_rd_handler() {
 	else {
 	  state = false;
 	  rd_res_in_ulong8.hi = rd_res;
-	  bool dummy = write_channel_nb_altera(line_fetcher_del_dma_rd_res, rd_res_in_ulong8);
-	  assert(dummy);
+	  should_write_line_fetcher_del_dma_rd_res = true;
+	  val_write_line_fetcher_del_dma_rd_res = rd_res_in_ulong8;
 	}
       }
       else if (inflight_rd_res_id == 2) {
@@ -99,8 +109,8 @@ hashtable_line_fetcher_dma_rd_handler() {
 	else {
 	  state = false;
 	  rd_res_in_ulong8.hi = rd_res;
-	  bool dummy = write_channel_nb_altera(line_fetcher_put_dma_rd_res, rd_res_in_ulong8);
-	  assert(dummy);
+	  should_write_line_fetcher_put_dma_rd_res = true;
+	  val_write_line_fetcher_put_dma_rd_res = rd_res_in_ulong8;
 	}
       }
       else if (inflight_rd_res_id == 3) {
@@ -111,15 +121,34 @@ hashtable_line_fetcher_dma_rd_handler() {
 	else {
 	  state = false;
 	  rd_res_in_ulong8.hi = rd_res;
-	  bool dummy = write_channel_nb_altera(line_fetcher_add_dma_rd_res, rd_res_in_ulong8);
-	  assert(dummy);
+	  should_write_line_fetcher_add_dma_rd_res = true;
+	  val_write_line_fetcher_add_dma_rd_res = rd_res_in_ulong8;
 	}
       }  
       else {
 	// ...
 	assert(false);
-      }
-      
+      }      
+    }
+
+    if (should_write_line_fetcher_get_dma_rd_res) {
+      bool dummy = write_channel_nb_altera(line_fetcher_get_dma_rd_res, val_write_line_fetcher_get_dma_rd_res);
+      assert(dummy);
+    }
+
+    if (should_write_line_fetcher_del_dma_rd_res) {
+      bool dummy = write_channel_nb_altera(line_fetcher_del_dma_rd_res, val_write_line_fetcher_del_dma_rd_res);
+      assert(dummy);
+    }
+
+    if (should_write_line_fetcher_put_dma_rd_res) {
+      bool dummy = write_channel_nb_altera(line_fetcher_put_dma_rd_res, val_write_line_fetcher_put_dma_rd_res);
+      assert(dummy);
+    }
+
+    if (should_write_line_fetcher_add_dma_rd_res) {
+      bool dummy = write_channel_nb_altera(line_fetcher_add_dma_rd_res, val_write_line_fetcher_add_dma_rd_res);
+      assert(dummy);
     }
     
   }

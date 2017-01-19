@@ -106,10 +106,11 @@ slab_besides_return() {
     ulong4 val_slab_return_table[SLAB_BIN_COUNT];
     bool auto_fetch_mode[SLAB_BIN_COUNT];
 	
-    ClSignal in_signal, grant_signal, sync_signal;
+    SlabRequest slabRequest;
+    ClSignal grant_signal, sync_signal;
     bool have_grant_signal = false, have_sync_signal = false;
     bool read_slab_besides_return_req;
-    in_signal.raw = read_channel_nb_altera(slab_besides_return_req, &read_slab_besides_return_req);
+    slabRequest = read_channel_nb_altera(slab_besides_return_req, &read_slab_besides_return_req);
     
     // routine, to see whether need perform fetching or returning
 #pragma unroll
@@ -127,8 +128,8 @@ slab_besides_return() {
       auto_fetch_mode[i] = !((slab_cache_table_size[i] >> 9) & 3);
 
       if ((auto_return_mode[i]) ||
-          (read_slab_besides_return_req && in_signal.Sig.Cmd == SIGNAL_REQUEST &&
-           (in_signal.Sig.LParam[0] <= slab_size(i) && (i == 0 || in_signal.Sig.LParam[0] > slab_size(i - 1))) &&
+          (read_slab_besides_return_req && slabRequest.cmd == SIGNAL_REQUEST &&
+           (slabRequest.slab_size <= slab_size(i) && (i == 0 || slabRequest.slab_size > slab_size(i - 1))) &&
            (!auto_return_mode[i] && slab_return_table_size[i]) && (current_return_table_head_state[i] == PART7))) {
         bool dummy;
 	val_slab_return_table[i] = read_channel_nb_altera(slab_return_table[i], &dummy);
@@ -164,9 +165,9 @@ slab_besides_return() {
     }
    
     if (read_slab_besides_return_req) {
-      if (in_signal.Sig.Cmd == SIGNAL_REQUEST) {	
+      if (slabRequest.cmd == SIGNAL_REQUEST) {	
 	// request for a new slab
-	slab_req_size = in_signal.Sig.LParam[0];
+	slab_req_size = slabRequest.slab_size;
 	
 #pragma unroll
 	for (int i = 0; i < SLAB_BIN_COUNT; i ++) {	  
@@ -282,7 +283,7 @@ slab_besides_return() {
 	  }
 	}
       }
-      else if (in_signal.Sig.Cmd == SIGNAL_QUERY_AVAILABLE_HEAD_PTR) {
+      else if (slabRequest.cmd == SIGNAL_QUERY_AVAILABLE_HEAD_PTR) {
 #pragma unroll
 	for (int i = 0; i < SLAB_BIN_COUNT; i++) {
 	  sync_signal.Sig.Cmd = SIGNAL_RESP_AVAILABLE_HEAD_PTR;
@@ -290,7 +291,7 @@ slab_besides_return() {
 	  have_sync_signal = true;
 	}
       }
-      else if (in_signal.Sig.Cmd == SIGNAL_QUERY_RETURN_TAIL_PTR) {
+      else if (slabRequest.cmd == SIGNAL_QUERY_RETURN_TAIL_PTR) {
 #pragma unroll
 	for (int i = 0; i < SLAB_BIN_COUNT; i++) {
 	  sync_signal.Sig.Cmd = SIGNAL_RESP_RETURN_TAIL_PTR;

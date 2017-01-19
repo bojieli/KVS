@@ -130,7 +130,7 @@ hashtable_get_offline_handler() {
 	// not the first packet => no metadata
 	// all the contents of this packet belong to val field
 	
-#define unroll_bs(idx) \
+#define unroll_sec(idx) \
 	if (val_res_idx == idx && i >= idx) {	\
 	  val_res_in_uchar[i] = data_in_uchar[i - idx]; \
 	}
@@ -139,7 +139,7 @@ hashtable_get_offline_handler() {
 	for (int i = 0; i < 32; i ++) {
 	  UNROLL_0_to_31;
 	}
-#undef unroll_bs	
+#undef unroll_sec	
 
 	ulong val_res_in_ulong[4];
 #pragma unroll
@@ -160,7 +160,7 @@ hashtable_get_offline_handler() {
 	res.val.w = val_res_in_ulong[3];
 	should_write_get_offline_res = true;
 
-#define unroll_bs(idx) \
+#define unroll_sec(idx) \
 	else if (val_res_idx == idx && i < idx) {		\
 	  val_res_in_uchar[i] = data_in_uchar[32 - idx + i];	\
 	}
@@ -175,7 +175,7 @@ hashtable_get_offline_handler() {
 	    val_res_in_uchar[i] = 0;
 	  }
 	}
-#undef unroll_bs	
+#undef unroll_sec	
 
 	if (val_size_left > 32) {
 	  val_size_left -= 32;

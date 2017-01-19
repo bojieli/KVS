@@ -121,14 +121,18 @@ slab_dma_rd_handler() {
 	else {
 	  inflight_rd_res_size_left = 0;
 	}
-#pragma unroll
-	for (int i = 0; i < SLAB_BIN_COUNT; i++) {
-	  if (inflight_rd_res_id == i) {
-	    bool dummy;
-	    dummy = write_channel_nb_altera(slab_cache_table[i], val_slab_dma_rd_res);
-	    assert(dummy);
-	  }
+
+#define unroll_sec(idx) \
+	if (inflight_rd_res_id == idx) { \
+	  bool dummy; \
+	  dummy = write_channel_nb_altera(slab_cache_table[idx], val_slab_dma_rd_res); \
+	  assert(dummy); \
 	}
+
+	UNROLL_0_to_4;
+	
+#undef unroll_sec	
+	
       }
     }
   }

@@ -32,7 +32,7 @@ hashtable_put_comparator() {
 	read_channel_nb_altera(fetching_put_req, &is_valid_show_ahead_fetching_put_req);
     }
 
-    if (is_valid_show_ahead_fetching_put_req) {      
+    if (is_valid_show_ahead_fetching_put_req) { 
       if (last_finished) {
 	line = read_channel_nb_altera(line_fetcher_put_dma_rd_res, &read_line);
 	if (read_line) {
@@ -369,11 +369,10 @@ hashtable_put_comparator() {
 	      // 1. modify the metadata of line
 	      // 2. apply a slab whose size = 2 + key_size + val_size
 	      // 3. write {key_size, val_size, key, val} into that slab
-	      ClSignal signal;
-	      signal.Sig.Cmd = SIGNAL_REQUEST;
-	      signal.Sig.LParam[0] = 2 + req.key_size + req.val_size;
+	      SlabRequest slabRequest;
+	      slabRequest.slab_size = 2 + req.key_size + req.val_size;
 	      bool dummy;
-	      dummy = write_channel_nb_altera(hashtable_put_offline_slab_req, signal.raw);
+	      dummy = write_channel_nb_altera(hashtable_put_offline_slab_req, slabRequest);
 	      assert(dummy);
 	      should_write_put_offline_handler = true;
 	      should_forwarding_to_put_offline_handler = true;
@@ -398,11 +397,10 @@ hashtable_put_comparator() {
 	    }
 	    else {
 	      // cannot find, apply new line
-	      ClSignal signal;
-	      signal.Sig.Cmd = SIGNAL_REQUEST;
-	      signal.Sig.LParam[0] = 64;
+	      SlabRequest slabRequest;
+	      slabRequest.slab_size = 64;
 	      bool dummy;
-	      dummy = write_channel_nb_altera(hashtable_put_newline_slab_req, signal.raw);
+	      dummy = write_channel_nb_altera(hashtable_put_newline_slab_req, slabRequest);
 	      assert(dummy);
 	      should_write_put_newline_handler = true;
 	      should_forwarding_to_put_newline_handler = true;

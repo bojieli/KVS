@@ -17,16 +17,17 @@ slab_return() {
   slab_start_addr = read_channel_altera(init_slab_return);
   
   while (1) {   
-    ClSignal in_signal, out_signal;
+    SlabReturn slabReturn;
+    ClSignal out_signal;
     bool read_slab_return_req;
-    in_signal.raw = read_channel_nb_altera(slab_return_req, &read_slab_return_req);
+    slabReturn = read_channel_nb_altera(slab_return_req, &read_slab_return_req);
 
     if (read_slab_return_req) {
       ushort slab_return_size;
       ulong slab_return_addr;
 
-      slab_return_size = in_signal.Sig.LParam[0];
-      slab_return_addr = (in_signal.Sig.LParam[1] - slab_start_addr) >> 5;
+      slab_return_size = slabReturn.slab_size;
+      slab_return_addr = (slabReturn.slab_addr - slab_start_addr) >> 5;
       
 #pragma unroll
       for (int i = 0; i < SLAB_BIN_COUNT; i ++) {

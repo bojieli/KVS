@@ -5,12 +5,6 @@ hashtable_add_comparator() {
   ulong slab_start_addr = init_data.x;
   ulong line_start_addr = init_data.y;
 
-  bool is_valid_line_fetcher_add_dma_rd_res;
-  ulong8 show_ahead_line_fetcher_add_dma_rd_res;
-
-  bool is_valid_fetching_add_req;
-  AddReq show_ahead_fetching_add_req;
-  
   while (1) {
     ulong8 line;
     bool read_line;
@@ -21,21 +15,14 @@ hashtable_add_comparator() {
 
     bool should_write_hashtable_add_inline_update_line_dma_wr_req_double = false;
     DMA_WriteReq_Compressed_Double val_hashtable_add_inline_update_line_dma_wr_req_double;
-        
-    if (!is_valid_line_fetcher_add_dma_rd_res) {
-      show_ahead_line_fetcher_add_dma_rd_res = read_channel_nb_altera(line_fetcher_add_dma_rd_res, &is_valid_line_fetcher_add_dma_rd_res);
-    }
 
-    if (!is_valid_fetching_add_req) {
-      show_ahead_fetching_add_req = read_channel_nb_altera(fetching_add_req, &is_valid_fetching_add_req);
-    }
+    bool read_line_fetcher_add_dma_rd_res;
+    line = read_channel_nb_altera(line_fetcher_add_dma_rd_res, &read_line_fetcher_add_dma_rd_res);
 
-    if (is_valid_line_fetcher_add_dma_rd_res && is_valid_fetching_add_req) {
-      is_valid_line_fetcher_add_dma_rd_res = false;
-      is_valid_fetching_add_req = false;
-
-      line = show_ahead_line_fetcher_add_dma_rd_res;
-      req = show_ahead_fetching_add_req;
+    if (read_line_fetcher_add_dma_rd_res) {
+      bool dummy;
+      req = read_channel_nb_altera(fetching_add_req, &dummy);
+      assert(dummy);	
 
       ulong4 key = req.key;
       uchar line_in_uchar[64];
@@ -263,7 +250,7 @@ hashtable_add_comparator() {
 
 	uchar new_line_in_uchar[64];
 
-#define unroll_bs(idx)							\
+#define unroll_sec(idx)							\
 	else if (inline_found_val_start_idx == idx && i >= idx && i <= idx + 3) { \
 	  new_line_in_uchar[i] = new_val_in_uchar[i - idx];		\
 	} 
@@ -278,7 +265,7 @@ hashtable_add_comparator() {
 	    new_line_in_uchar[i] = line_in_uchar[i];
 	  }
 	}
-#undef unroll_bs	
+#undef unroll_sec	
 	
 	ulong tmp[8];
 #pragma unroll

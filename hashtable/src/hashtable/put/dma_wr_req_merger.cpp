@@ -1,137 +1,93 @@
 _CL_VOID
 hashtable_put_dma_wr_req_merger() {
   ushort inflight_wr_size_left = 0;
-  uchar inflight_wr_id;
+  uchar inflight_wr_id = 0;
 
-  bool is_valid_hashtable_put_inline_dma_wr_req_double = false;
-  DMA_WriteReq_Compressed_Double show_ahead_hashtable_put_inline_dma_wr_req_double;
-  bool show_ahead_hashtable_put_inline_dma_wr_req_double_valid1 = true;
+  DMA_WriteReq_Compressed val_hashtable_put_inline_dma_wr_req;
+  bool is_valid_val_hashtable_put_inline_dma_wr_req = false;
+
+  DMA_WriteReq_Compressed val_hashtable_put_offline_update_line_dma_wr_req;
+  bool is_valid_val_hashtable_put_offline_update_line_dma_wr_req = false;
+
+  DMA_WriteReq_Compressed val_hashtable_put_offline_update_slab_dma_wr_req;
+  bool is_valid_val_hashtable_put_offline_update_slab_dma_wr_req = false;
   
-  bool is_valid_hashtable_put_offline_update_line_dma_wr_req_double = false;
-  DMA_WriteReq_Compressed_Double show_ahead_hashtable_put_offline_update_line_dma_wr_req_double;
-  bool show_ahead_hashtable_put_offline_update_line_dma_wr_req_double_valid1 = true;
-  
-  bool is_valid_hashtable_put_offline_update_slab_dma_wr_req_double = false;
-  DMA_WriteReq_Compressed_Double show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double;
-  bool show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double_valid1 = true;  
-    
-  bool is_valid_hashtable_put_newline_dma_wr_req = false;  
-  DMA_WriteReq_Compressed show_ahead_hashtable_put_newline_dma_wr_req;
-  
-  while (1) {
-
-    if (!is_valid_hashtable_put_inline_dma_wr_req_double) {
-      show_ahead_hashtable_put_inline_dma_wr_req_double =
-	read_channel_nb_altera(hashtable_put_inline_dma_wr_req_double,
-			       &is_valid_hashtable_put_inline_dma_wr_req_double);
-      show_ahead_hashtable_put_inline_dma_wr_req_double_valid1 = true;
-    }
-
-    if (!is_valid_hashtable_put_offline_update_line_dma_wr_req_double) {
-      show_ahead_hashtable_put_offline_update_line_dma_wr_req_double =
-	read_channel_nb_altera(hashtable_put_offline_update_line_dma_wr_req_double,
-			       &is_valid_hashtable_put_offline_update_line_dma_wr_req_double);
-      show_ahead_hashtable_put_offline_update_line_dma_wr_req_double_valid1 = true;
-    }
-
-    if (!is_valid_hashtable_put_offline_update_slab_dma_wr_req_double) {
-      show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double =
-	read_channel_nb_altera(hashtable_put_offline_update_slab_dma_wr_req_double,
-			       &is_valid_hashtable_put_offline_update_slab_dma_wr_req_double);
-      show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double_valid1 = true;
-    }
-
-    if (!is_valid_hashtable_put_newline_dma_wr_req) {
-      show_ahead_hashtable_put_newline_dma_wr_req =
-	read_channel_nb_altera(hashtable_put_newline_dma_wr_req,
-			       &is_valid_hashtable_put_newline_dma_wr_req);
-    }
-    
-    if (!inflight_wr_size_left) {
-      if (is_valid_hashtable_put_inline_dma_wr_req_double) {
-	inflight_wr_size_left = show_ahead_hashtable_put_inline_dma_wr_req_double.x.size;
-	inflight_wr_id = 0;
-      }
-      else if (is_valid_hashtable_put_offline_update_line_dma_wr_req_double) {
-	inflight_wr_size_left = show_ahead_hashtable_put_offline_update_line_dma_wr_req_double.x.size;
-	inflight_wr_id = 1;
-      }
-      else if (is_valid_hashtable_put_offline_update_slab_dma_wr_req_double) {
-	inflight_wr_size_left = show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double.x.size;
-	inflight_wr_id = 2;
-      }
-      else if (is_valid_hashtable_put_newline_dma_wr_req) {
-	inflight_wr_size_left = show_ahead_hashtable_put_newline_dma_wr_req.size;
-	inflight_wr_id = 3;
-      }
-    }
-
-    bool should_write_hashtable_put_dma_wr_req = false;
-
+  while (1) {   
+    bool read_wr_req = false;
     DMA_WriteReq_Compressed wr_req_compressed;
-    if (inflight_wr_size_left) {
-      if (inflight_wr_id == 0) {
-	if (show_ahead_hashtable_put_inline_dma_wr_req_double_valid1) {
-	  show_ahead_hashtable_put_inline_dma_wr_req_double_valid1 = false;
-	  wr_req_compressed = show_ahead_hashtable_put_inline_dma_wr_req_double.x;
-	  should_write_hashtable_put_dma_wr_req = true;
-	  if (!show_ahead_hashtable_put_inline_dma_wr_req_double.valid2) {
-	    is_valid_hashtable_put_inline_dma_wr_req_double = false;
-	  }
-	}
-	else {
-	  is_valid_hashtable_put_inline_dma_wr_req_double = false;
-	  wr_req_compressed = show_ahead_hashtable_put_inline_dma_wr_req_double.y;
-	  should_write_hashtable_put_dma_wr_req = true;	  
-	}
-      }
-      else if (inflight_wr_id == 1) {
-	if (show_ahead_hashtable_put_offline_update_line_dma_wr_req_double_valid1) {
-	  show_ahead_hashtable_put_offline_update_line_dma_wr_req_double_valid1 = false;
-	  wr_req_compressed = show_ahead_hashtable_put_offline_update_line_dma_wr_req_double.x;
-	  should_write_hashtable_put_dma_wr_req = true;
-	  if (!show_ahead_hashtable_put_offline_update_line_dma_wr_req_double.valid2) {
-	    is_valid_hashtable_put_offline_update_line_dma_wr_req_double = false;
-	  }
-	}
-	else {
-	  is_valid_hashtable_put_offline_update_line_dma_wr_req_double = false;
-	  wr_req_compressed = show_ahead_hashtable_put_offline_update_line_dma_wr_req_double.y;
-	  should_write_hashtable_put_dma_wr_req = true;	  
-	}
-      }
-      else if (inflight_wr_id == 2) {
-	if (show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double_valid1) {
-	  show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double_valid1 = false;
-	  wr_req_compressed = show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double.x;
-	  should_write_hashtable_put_dma_wr_req = true;
-	  if (!show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double.valid2) {
-	    is_valid_hashtable_put_offline_update_slab_dma_wr_req_double = false;
-	  }
-	}
-	else {
-	  is_valid_hashtable_put_offline_update_slab_dma_wr_req_double = false;
-	  wr_req_compressed = show_ahead_hashtable_put_offline_update_slab_dma_wr_req_double.y;
-	  should_write_hashtable_put_dma_wr_req = true;	  
-	}
-      }
-      else if (inflight_wr_id == 3) {
-	is_valid_hashtable_put_newline_dma_wr_req = false;
-	wr_req_compressed = show_ahead_hashtable_put_newline_dma_wr_req;
-	should_write_hashtable_put_dma_wr_req = true;
-      }      
 
-      assert(should_write_hashtable_put_dma_wr_req);
+    if (is_valid_val_hashtable_put_inline_dma_wr_req) {
+      read_wr_req = true;
+      is_valid_val_hashtable_put_inline_dma_wr_req = false;
+      wr_req_compressed = val_hashtable_put_inline_dma_wr_req;
+    }
+    else if (is_valid_val_hashtable_put_offline_update_line_dma_wr_req) {
+      read_wr_req = true;
+      is_valid_val_hashtable_put_offline_update_line_dma_wr_req = false;
+      wr_req_compressed = val_hashtable_put_offline_update_line_dma_wr_req;
+    }
+    else if (is_valid_val_hashtable_put_offline_update_slab_dma_wr_req) {
+      read_wr_req = true;
+      is_valid_val_hashtable_put_offline_update_slab_dma_wr_req = false;
+      wr_req_compressed = val_hashtable_put_offline_update_slab_dma_wr_req;
+    }
+    
+    if (!read_wr_req && (inflight_wr_id == 0 || inflight_wr_id == 1)) {
+      DMA_WriteReq_Compressed_Double wr_req_compressed_double = read_channel_nb_altera(hashtable_put_inline_dma_wr_req_double, &read_wr_req);
+      if (read_wr_req) {
+	inflight_wr_id = 1;
+	wr_req_compressed = wr_req_compressed_double.x;
+	if (wr_req_compressed_double.valid2) {
+	  val_hashtable_put_inline_dma_wr_req = wr_req_compressed_double.y;
+	  is_valid_val_hashtable_put_inline_dma_wr_req = true;
+	}
+      }
+    }
+
+    if (!read_wr_req && (inflight_wr_id == 0 || inflight_wr_id == 2)) {
+      DMA_WriteReq_Compressed_Double wr_req_compressed_double = read_channel_nb_altera(hashtable_put_offline_update_line_dma_wr_req_double, &read_wr_req);
+      if (read_wr_req) {
+	inflight_wr_id = 2;
+	wr_req_compressed = wr_req_compressed_double.x;
+	if (wr_req_compressed_double.valid2) {
+	  val_hashtable_put_offline_update_line_dma_wr_req = wr_req_compressed_double.y;
+	  is_valid_val_hashtable_put_offline_update_line_dma_wr_req = true;
+	}
+      }
+    }
+
+    if (!read_wr_req && (inflight_wr_id == 0 || inflight_wr_id == 3)) {
+      DMA_WriteReq_Compressed_Double wr_req_compressed_double = read_channel_nb_altera(hashtable_put_offline_update_slab_dma_wr_req_double, &read_wr_req);
+      if (read_wr_req) {
+	inflight_wr_id = 3;
+	wr_req_compressed = wr_req_compressed_double.x;
+	if (wr_req_compressed_double.valid2) {
+	  val_hashtable_put_offline_update_slab_dma_wr_req = wr_req_compressed_double.y;
+	  is_valid_val_hashtable_put_offline_update_slab_dma_wr_req = true;
+	}
+      }
+    }
+
+    if (!read_wr_req && (inflight_wr_id == 0 || inflight_wr_id == 4)) {
+      wr_req_compressed = read_channel_nb_altera(hashtable_put_newline_dma_wr_req, &read_wr_req);
+      if (read_wr_req) {
+	inflight_wr_id = 4;
+      }
+    }
       
+    if (read_wr_req) {
+      if (!inflight_wr_size_left) {
+	inflight_wr_size_left = wr_req_compressed.size;
+      }
+
       if (inflight_wr_size_left > 32) {
 	inflight_wr_size_left -= 32;
       }
       else {
 	inflight_wr_size_left = 0;
+	inflight_wr_id = 0;
       }
-    }
-    
-    if (should_write_hashtable_put_dma_wr_req) {
+      
       bool dummy = write_channel_nb_altera(hashtable_put_dma_wr_req, wr_req_compressed);
       assert(dummy);
     }

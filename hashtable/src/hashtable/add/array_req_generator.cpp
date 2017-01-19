@@ -66,7 +66,7 @@ hashtable_add_array_req_generator() {
       req.key_size = info.key_size + 1;
       req.delta = info.delta;
 
-#define unroll_bs(idx)							\
+#define unroll_sec(idx)							\
       if (idx == info.key_size && i >= idx && i - idx < cnt_in_char_size) { \
 	key_slice[i] = cnt_in_char[i - idx] + '0';			\
       }
@@ -75,7 +75,7 @@ hashtable_add_array_req_generator() {
       for (int i = 0; i < 32; i ++) {
 	UNROLL_2_to_31;
       }
-#undef unroll_bs      
+#undef unroll_sec      
       
       ulong tmp[4];
 #pragma unroll

@@ -142,3 +142,13 @@ typedef struct AddOfflineParsed {
   ulong4 val;
   uint delta;
 }AddOfflineParsed;
+
+typedef struct SlabReturn {
+  ushort slab_size;
+  ulong slab_addr;
+}SlabReturn;
+
+typedef struct SlabRequest {
+  uchar cmd;
+  ushort slab_size;
+}SlabRequest;

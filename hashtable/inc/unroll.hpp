@@ -1,46 +1,49 @@
 #pragma once
 
 #define UNROLL_0_to_31						\
-  unroll_bs(0) unroll_bs(1) unroll_bs(2) unroll_bs(3)		\
-  unroll_bs(4) unroll_bs(5) unroll_bs(6) unroll_bs(7)		\
-  unroll_bs(8) unroll_bs(9) unroll_bs(10) unroll_bs(11)		\
-  unroll_bs(12) unroll_bs(13) unroll_bs(14) unroll_bs(15)	\
-  unroll_bs(16) unroll_bs(17) unroll_bs(18) unroll_bs(19)	\
-  unroll_bs(20) unroll_bs(21) unroll_bs(22) unroll_bs(23)	\
-  unroll_bs(24) unroll_bs(25) unroll_bs(26) unroll_bs(27)	\
-  unroll_bs(28) unroll_bs(29) unroll_bs(30) unroll_bs(31) 
+  unroll_sec(0) unroll_sec(1) unroll_sec(2) unroll_sec(3)		\
+  unroll_sec(4) unroll_sec(5) unroll_sec(6) unroll_sec(7)		\
+  unroll_sec(8) unroll_sec(9) unroll_sec(10) unroll_sec(11)		\
+  unroll_sec(12) unroll_sec(13) unroll_sec(14) unroll_sec(15)	\
+  unroll_sec(16) unroll_sec(17) unroll_sec(18) unroll_sec(19)	\
+  unroll_sec(20) unroll_sec(21) unroll_sec(22) unroll_sec(23)	\
+  unroll_sec(24) unroll_sec(25) unroll_sec(26) unroll_sec(27)	\
+  unroll_sec(28) unroll_sec(29) unroll_sec(30) unroll_sec(31) 
 
 #define UNROLL_2_to_31						\
-  unroll_bs(2) unroll_bs(3)					\
-  unroll_bs(4) unroll_bs(5) unroll_bs(6) unroll_bs(7)		\
-  unroll_bs(8) unroll_bs(9) unroll_bs(10) unroll_bs(11)		\
-  unroll_bs(12) unroll_bs(13) unroll_bs(14) unroll_bs(15)	\
-  unroll_bs(16) unroll_bs(17) unroll_bs(18) unroll_bs(19)	\
-  unroll_bs(20) unroll_bs(21) unroll_bs(22) unroll_bs(23)	\
-  unroll_bs(24) unroll_bs(25) unroll_bs(26) unroll_bs(27)	\
-  unroll_bs(28) unroll_bs(29) unroll_bs(30) unroll_bs(31)
+  unroll_sec(2) unroll_sec(3)					\
+  unroll_sec(4) unroll_sec(5) unroll_sec(6) unroll_sec(7)		\
+  unroll_sec(8) unroll_sec(9) unroll_sec(10) unroll_sec(11)		\
+  unroll_sec(12) unroll_sec(13) unroll_sec(14) unroll_sec(15)	\
+  unroll_sec(16) unroll_sec(17) unroll_sec(18) unroll_sec(19)	\
+  unroll_sec(20) unroll_sec(21) unroll_sec(22) unroll_sec(23)	\
+  unroll_sec(24) unroll_sec(25) unroll_sec(26) unroll_sec(27)	\
+  unroll_sec(28) unroll_sec(29) unroll_sec(30) unroll_sec(31)
 
 #define UNROLL_3_to_63						\
-  unroll_bs(3)							\
-  unroll_bs(4) unroll_bs(5) unroll_bs(6) unroll_bs(7)		\
-  unroll_bs(8) unroll_bs(9) unroll_bs(10) unroll_bs(11)		\
-  unroll_bs(12) unroll_bs(13) unroll_bs(14) unroll_bs(15)	\
-  unroll_bs(16) unroll_bs(17) unroll_bs(18) unroll_bs(19)	\
-  unroll_bs(20) unroll_bs(21) unroll_bs(22) unroll_bs(23)	\
-  unroll_bs(24) unroll_bs(25) unroll_bs(26) unroll_bs(27)	\
-  unroll_bs(28) unroll_bs(29) unroll_bs(30) unroll_bs(31)	\
-  unroll_bs(28) unroll_bs(29) unroll_bs(30) unroll_bs(31)	\
-  unroll_bs(32) unroll_bs(33) unroll_bs(34) unroll_bs(35)	\
-  unroll_bs(36) unroll_bs(37) unroll_bs(38) unroll_bs(39)	\
-  unroll_bs(40) unroll_bs(41) unroll_bs(42) unroll_bs(43)	\
-  unroll_bs(44) unroll_bs(45) unroll_bs(46) unroll_bs(47)	\
-  unroll_bs(48) unroll_bs(49) unroll_bs(50) unroll_bs(51)	\
-  unroll_bs(52) unroll_bs(53) unroll_bs(54) unroll_bs(55)	\
-  unroll_bs(56) unroll_bs(57) unroll_bs(58) unroll_bs(59)	\
-  unroll_bs(60) unroll_bs(61) unroll_bs(62) unroll_bs(53)
+  unroll_sec(3)							\
+  unroll_sec(4) unroll_sec(5) unroll_sec(6) unroll_sec(7)		\
+  unroll_sec(8) unroll_sec(9) unroll_sec(10) unroll_sec(11)		\
+  unroll_sec(12) unroll_sec(13) unroll_sec(14) unroll_sec(15)	\
+  unroll_sec(16) unroll_sec(17) unroll_sec(18) unroll_sec(19)	\
+  unroll_sec(20) unroll_sec(21) unroll_sec(22) unroll_sec(23)	\
+  unroll_sec(24) unroll_sec(25) unroll_sec(26) unroll_sec(27)	\
+  unroll_sec(28) unroll_sec(29) unroll_sec(30) unroll_sec(31)	\
+  unroll_sec(28) unroll_sec(29) unroll_sec(30) unroll_sec(31)	\
+  unroll_sec(32) unroll_sec(33) unroll_sec(34) unroll_sec(35)	\
+  unroll_sec(36) unroll_sec(37) unroll_sec(38) unroll_sec(39)	\
+  unroll_sec(40) unroll_sec(41) unroll_sec(42) unroll_sec(43)	\
+  unroll_sec(44) unroll_sec(45) unroll_sec(46) unroll_sec(47)	\
+  unroll_sec(48) unroll_sec(49) unroll_sec(50) unroll_sec(51)	\
+  unroll_sec(52) unroll_sec(53) unroll_sec(54) unroll_sec(55)	\
+  unroll_sec(56) unroll_sec(57) unroll_sec(58) unroll_sec(59)	\
+  unroll_sec(60) unroll_sec(61) unroll_sec(62) unroll_sec(53)
 
 #define UNROLL_3_to_12 \
-  unroll_bs(3)							\
-  unroll_bs(4) unroll_bs(5) unroll_bs(6) unroll_bs(7)		\
-  unroll_bs(8) unroll_bs(9) unroll_bs(10) unroll_bs(11)		\
-  unroll_bs(12)
+  unroll_sec(3)							\
+  unroll_sec(4) unroll_sec(5) unroll_sec(6) unroll_sec(7)		\
+  unroll_sec(8) unroll_sec(9) unroll_sec(10) unroll_sec(11)		\
+  unroll_sec(12)
+
+#define UNROLL_0_to_4 \
+  unroll_sec(0) unroll_sec(1) unroll_sec(2) unroll_sec(3) unroll_sec(4)

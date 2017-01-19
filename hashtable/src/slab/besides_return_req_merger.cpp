@@ -4,7 +4,7 @@ slab_besides_return_req_merger() {
     uchar req_id;
     bool read_slab_besides_return_req;
     // pointer synchronization
-    ulong8 val_slab_besides_return_req = read_channel_nb_altera(host_slab_besides_return_req, &read_slab_besides_return_req);
+    SlabRequest val_slab_besides_return_req = read_channel_nb_altera(host_slab_besides_return_req, &read_slab_besides_return_req);
     if (!read_slab_besides_return_req) {
       // slab request
       val_slab_besides_return_req = read_channel_nb_altera(hashtable_put_offline_slab_req, &read_slab_besides_return_req);
@@ -15,10 +15,12 @@ slab_besides_return_req_merger() {
 	  // other requests
 	}
 	else {
+	  val_slab_besides_return_req.cmd = SIGNAL_REQUEST;
 	  req_id = 2;
 	}
       }
       else {
+	val_slab_besides_return_req.cmd = SIGNAL_REQUEST;
 	req_id = 1;
       }
     }

@@ -164,7 +164,7 @@ hashtable_add_offline_handler() {
 	// not the first packet => no metadata
 	// all the contents of this packet belong to val field	
 	
-#define unroll_bs(idx) \
+#define unroll_sec(idx) \
 	if (val_res_idx == idx && i >= idx) { \
 	  val_res_in_uchar[i] = data_in_uchar[i - idx]; \
 	}
@@ -173,7 +173,7 @@ hashtable_add_offline_handler() {
 	for (int i = 0; i < 32; i ++) {
 	  UNROLL_0_to_31;
 	}
-#undef unroll_bs	
+#undef unroll_sec	
 
 	if (is_array_first) {
 	  if (!array_cnt_got) {

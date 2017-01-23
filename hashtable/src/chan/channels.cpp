@@ -35,7 +35,7 @@ decl_channel(ulong8, 1, init_slab_dma_rd_handler);
 // pcie/rx -> slab/besides_return
 decl_channel(ulong8, 1, host_init_slab);
 // slab/dma_rd_handler -> slab/besides_return
-decl_channel(ulong4, 256, slab_cache_table[SLAB_BIN_COUNT]);
+decl_channel(ulong4, 512, slab_cache_table[SLAB_BIN_COUNT]);
 // src/slab/return -> src/slab/besides_return
 decl_channel(ulong4, 256, slab_return_table[SLAB_BIN_COUNT]);
 // slab/dma_rd_handler -> slab/besides_return

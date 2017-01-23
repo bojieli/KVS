@@ -125,7 +125,7 @@ slab_besides_return() {
 	auto_return_mode[i] = SLAB_RETURN_TO_HOST_SIZE;
 	auto_return_mode_first = true;
       }
-      auto_fetch_mode[i] = !((slab_cache_table_size[i] >> 9) & 3);
+      auto_fetch_mode[i] = !((slab_cache_table_size[i] >> 10) & 3);
 
       if ((auto_return_mode[i]) ||
           (read_slab_besides_return_req && slabRequest.cmd == SIGNAL_REQUEST &&

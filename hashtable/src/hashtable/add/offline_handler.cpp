@@ -143,11 +143,13 @@ hashtable_add_offline_handler() {
 	    ArrayAddReqInfo info;
 	    info.net_meta = net_meta;
 	    info.key = key;
-	    info.cnt = array_cnt;
+	    info.cnt = array_cnt - 1;
 	    info.key_size = key_size;
 	    info.delta = delta;
-	    should_write_array_add_req_info = true;
-	    val_array_add_req_info = info;
+	    if (info.cnt) {
+	      should_write_array_add_req_info = true;
+	      val_array_add_req_info = info;
+	    }
 	  }
 	}
 	

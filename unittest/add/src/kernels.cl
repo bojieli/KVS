@@ -612,7 +612,7 @@ void test() {
   put_req.val.w = 0;
   write_channel_altera(input_put_req, put_req);
   usleep(100000);
-  
+
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
   assert(put_res.key_size == req_key_size);
@@ -673,6 +673,7 @@ void test() {
   assert(get_res.val.w == 0);
   
   get_res = read_channel_altera(output_get_res);
+
   string2key("$arr1", req_key_size, req_key);
   assert(get_res.found);
   assert(get_res.key_size == req_key_size);
@@ -684,7 +685,7 @@ void test() {
   assert(get_res.val.z == 0x1838485868678728);
   assert(get_res.val.w == 0x7982945692434864);
   usleep(100000);
-  
+
   // array add
   string2key("$arr", add_req.key_size, add_req.key);  
   req_key_size = add_req.key_size;

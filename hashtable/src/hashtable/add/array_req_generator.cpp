@@ -27,6 +27,7 @@ hashtable_add_array_req_generator() {
       cnt ++;
       uchar cnt_in_char_size;
       uchar cnt_in_char[16];
+      
       ushort d0 = cnt;
       ushort d1 = d0 >> 4;
       ushort d2 = d1 >> 4;

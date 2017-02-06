@@ -22,7 +22,7 @@ hashtable_add_comparator() {
     if (read_line_fetcher_add_dma_rd_res) {
       bool dummy;
       req = read_channel_nb_altera(fetching_add_req, &dummy);
-      assert(dummy);	
+      assert(dummy);
 
       ulong4 key = req.key;
       uchar line_in_uchar[64];
@@ -269,17 +269,17 @@ hashtable_add_comparator() {
 	
 	ulong tmp[8];
 #pragma unroll
-	  for (int i = 0; i < 8; i ++) {
-	    tmp[i] =
-	      ((ulong)new_line_in_uchar[0 + (i << 3)]) << 56 |
-	      ((ulong)new_line_in_uchar[1 + (i << 3)]) << 48 |
-	      ((ulong)new_line_in_uchar[2 + (i << 3)]) << 40 |
-	      ((ulong)new_line_in_uchar[3 + (i << 3)]) << 32 |
-	      ((ulong)new_line_in_uchar[4 + (i << 3)]) << 24 |
-	      ((ulong)new_line_in_uchar[5 + (i << 3)]) << 16 |
-	      ((ulong)new_line_in_uchar[6 + (i << 3)]) << 8 |
-	      ((ulong)new_line_in_uchar[7 + (i << 3)]) << 0;
-	  }
+	for (int i = 0; i < 8; i ++) {
+	  tmp[i] =
+	    ((ulong)new_line_in_uchar[0 + (i << 3)]) << 56 |
+	    ((ulong)new_line_in_uchar[1 + (i << 3)]) << 48 |
+	    ((ulong)new_line_in_uchar[2 + (i << 3)]) << 40 |
+	    ((ulong)new_line_in_uchar[3 + (i << 3)]) << 32 |
+	    ((ulong)new_line_in_uchar[4 + (i << 3)]) << 24 |
+	    ((ulong)new_line_in_uchar[5 + (i << 3)]) << 16 |
+	    ((ulong)new_line_in_uchar[6 + (i << 3)]) << 8 |
+	    ((ulong)new_line_in_uchar[7 + (i << 3)]) << 0;
+	}
 	// update inline value
 	if (inline_found_val_end_idx < 32) {
 	  // do dma write on first half

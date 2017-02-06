@@ -192,7 +192,7 @@ decl_channel(AddOfflineType, 128, slab_fetcher_add_offline_dma_rd_res_size_with_
 decl_channel(AddOfflineParsed, 256, add_offline_parsed);
 // hashtable/add/comparator -> hashtable/add/res_merger
 decl_channel(AddRes, 256, add_inline_res);
-// hashtable/add/comparator -> hashtable/add/res_merger
+// hashtable/add/adder -> hashtable/add/res_merger
 decl_channel(AddRes, 256, add_offline_res);
 // hashtable/add/comparator -> hashtable/add/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed_Double, 256, hashtable_add_inline_update_line_dma_wr_req_double);

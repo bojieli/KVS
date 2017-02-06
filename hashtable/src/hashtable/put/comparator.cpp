@@ -36,10 +36,6 @@ hashtable_put_comparator() {
       if (last_finished) {
 	line = read_channel_nb_altera(line_fetcher_put_dma_rd_res, &read_line);
 	if (read_line) {
-	  // static int cnt = 0;
-	  // cnt ++;
-	  // cout << cnt << endl;
-	  
 	  is_valid_show_ahead_fetching_put_req = false;
 	  last_finished = false;
 	  PutReq req = show_ahead_fetching_put_req;

@@ -12,12 +12,30 @@ decl_channel(DmaReadReqWithId, 128, slab_non_init_dma_rd_req_with_id);
 decl_channel(DmaContext, 128, slab_dma_handler_rd_req_context);
 // hashtable/line_fetcher/line_fetcher_rd_handler -> dma/rd_manager
 decl_channel(DMA_ReadReq_Compressed, 128, line_fetcher_dma_rd_req);
-// fpga -> host
+// TODO
 decl_channel(ulong8, 256, dma_rd_req);
-// host -> fpga
+// TODO
+#ifdef _CSIM
+decl_channel(ulong4, 4096, dma_rd_res);
+#else
 decl_channel(ulong4, 256, dma_rd_res);
-// fpga -> host
+#endif
+// TODO
 decl_channel(ulong8, 256, dma_wr_req);
+// fpga -> host
+decl_channel(ulong8, 256, dma1_rd_req);
+// host -> fpga
+decl_channel(ulong4, 256, dma1_rd_res);
+// fpga -> host
+decl_channel(ulong8, 256, dma1_wr_req);
+// fpga -> host
+decl_channel(ulong8, 256, dma0_rd_req);
+// host -> fpga
+decl_channel(ulong4, 256, dma0_rd_res);
+// fpga -> host
+decl_channel(ulong8, 256, dma0_wr_req);
+// TODO
+decl_channel(ushort, 256, dma_rd_req_size);
 // slab/dma_wr_handler -> dma/wr_manager   
 decl_channel(DMA_WriteReq_Compressed, 512, slab_dma_wr_req);
 // slab/besides_return -> slab/dma_wr_handler

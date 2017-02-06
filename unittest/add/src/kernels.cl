@@ -36,6 +36,9 @@
 /**********************************/
 #include "dma/rd_manager.cpp"
 #include "dma/wr_manager.cpp"
+#include "dma/wr_mux.cpp"
+#include "dma/rd_mux.cpp"
+#include "dma/rd_demux.cpp"
 /**********************************/
 
 /**********************************/
@@ -172,7 +175,7 @@ host_init() {
   }
 }
 
-void host_dma_simulator() {
+void host_dma_simulator0() {
   int cnt = 0;
   ulong start_addr = (ulong)host_slab_available_table;
   ulong end_addr = start_addr + 1024ULL * 1024 * 1024 * 64;
@@ -183,7 +186,7 @@ void host_dma_simulator() {
     DMA_WriteReq wr_req;
 
     // write simulator
-    wr_req.raw = read_channel_nb_altera(dma_wr_req, &read_dma_wr_req);
+    wr_req.raw = read_channel_nb_altera(dma0_wr_req, &read_dma_wr_req);
     if (read_dma_wr_req) {
       assert(wr_req.req.size % 8 == 0);
       uint size = wr_req.req.size;
@@ -215,14 +218,14 @@ void host_dma_simulator() {
 	  size -= 8;
 	}
 	if (size) {
-	  wr_req.raw = read_channel_altera(dma_wr_req);
+	  wr_req.raw = read_channel_altera(dma0_wr_req);
 	  cnt = 0 ;
 	}
       }
     }
     
     // read simulator
-    rd_req.raw = read_channel_nb_altera(dma_rd_req, &read_dma_rd_req);
+    rd_req.raw = read_channel_nb_altera(dma0_rd_req, &read_dma_rd_req);
     if (read_dma_rd_req) {
       assert(rd_req.req.size % 32 == 0);
       assert(rd_req.req.address >= start_addr);
@@ -254,14 +257,109 @@ void host_dma_simulator() {
 	if (cnt == 0) {
 	  DMA_ReadRes rd_res;
 	  rd_res.res.data = data;
-	  write_channel_altera(dma_rd_res, rd_res.raw);
+	  write_channel_altera(dma0_rd_res, rd_res.raw);
 	  data.x = data.y = data.z = data.w = 0;
 	}
       }
       if (cnt != 0) {
 	DMA_ReadRes rd_res;
 	rd_res.res.data = data;
-	write_channel_altera(dma_rd_res, rd_res.raw);
+	write_channel_altera(dma0_rd_res, rd_res.raw);
+      }
+    }	
+  }
+}
+
+void host_dma_simulator1() {
+  int cnt = 0;
+  ulong start_addr = (ulong)host_slab_available_table;
+  ulong end_addr = start_addr + 1024ULL * 1024 * 1024 * 64;
+  
+  while (1) {
+    bool read_dma_rd_req, read_dma_wr_req;
+    DMA_ReadReq rd_req;
+    DMA_WriteReq wr_req;
+
+    // write simulator
+    wr_req.raw = read_channel_nb_altera(dma1_wr_req, &read_dma_wr_req);
+    if (read_dma_wr_req) {
+      assert(wr_req.req.size % 8 == 0);
+      uint size = wr_req.req.size;
+      assert(wr_req.req.address >= start_addr);
+      assert(wr_req.req.address < end_addr);
+      ulong *mem_in_ulong = (ulong *)wr_req.req.address;
+      int cnt = 0;
+
+      while (size) {
+	while (size && cnt <= 3) {
+	  switch (cnt) {
+	  case 0:
+	    *mem_in_ulong = wr_req.req.data.x;
+	    break;
+	  case 1:
+	    *mem_in_ulong = wr_req.req.data.y;
+	    break;
+	  case 2:
+	    *mem_in_ulong = wr_req.req.data.z;	      
+	    break;
+	  case 3:
+	    *mem_in_ulong = wr_req.req.data.w;
+	    break;
+	  default:
+	    break;
+	  }
+	  cnt ++;
+	  mem_in_ulong ++;
+	  size -= 8;
+	}
+	if (size) {
+	  wr_req.raw = read_channel_altera(dma1_wr_req);
+	  cnt = 0 ;
+	}
+      }
+    }
+    
+    // read simulator
+    rd_req.raw = read_channel_nb_altera(dma1_rd_req, &read_dma_rd_req);
+    if (read_dma_rd_req) {
+      assert(rd_req.req.size % 32 == 0);
+      assert(rd_req.req.address >= start_addr);
+      assert(rd_req.req.address < end_addr);
+      ulong *mem_in_ulong = (ulong *)rd_req.req.address;
+      ulong4 data;
+      data.x = data.y = data.z = data.w = 0;
+      int cnt = 0;
+      while (rd_req.req.size) {
+	switch (cnt) {
+	case 0:
+	  data.x = *mem_in_ulong;
+	  break;
+	case 1:
+	  data.y = *mem_in_ulong;
+	  break;
+	case 2:
+	  data.z = *mem_in_ulong;
+	  break;
+	case 3:
+	  data.w = *mem_in_ulong;
+	  break;
+	default:
+	  break;	 
+	}
+	mem_in_ulong ++;
+	cnt = (cnt + 1) % 4;
+	rd_req.req.size -= 8;
+	if (cnt == 0) {
+	  DMA_ReadRes rd_res;
+	  rd_res.res.data = data;
+	  write_channel_altera(dma1_rd_res, rd_res.raw);
+	  data.x = data.y = data.z = data.w = 0;
+	}
+      }
+      if (cnt != 0) {
+	DMA_ReadRes rd_res;
+	rd_res.res.data = data;
+	write_channel_altera(dma1_rd_res, rd_res.raw);
       }
     }	
   }
@@ -451,7 +549,7 @@ void test() {
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
   usleep(100000);
-  
+
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
   assert(put_res.key_size == 6);
@@ -767,10 +865,14 @@ int main() {
   host_init();
   boost::thread t_host_routine(&host_routine);
   
-  boost::thread t_host_dma_simulator(&host_dma_simulator);
+  boost::thread t_host_dma_simulator0(&host_dma_simulator0);
+  boost::thread t_host_dma_simulator1(&host_dma_simulator1);
   
   boost::thread t_dma_rd_manager(&dma_rd_manager);
   boost::thread t_dma_wr_manager(&dma_wr_manager);
+  boost::thread t_dma_rd_mux(&dma_rd_mux);
+  boost::thread t_dma_wr_mux(&dma_wr_mux);
+  boost::thread t_dma_rd_demux(&dma_rd_demux);
   
   boost::thread t_pcie_tx(&pcie_tx);
   boost::thread t_pcie_rx(&pcie_rx);
@@ -811,7 +913,7 @@ int main() {
   
   boost::thread t_test(&test);
   
-  t_host_dma_simulator.join();
+  t_host_dma_simulator0.join();
 
   return 0;
 }

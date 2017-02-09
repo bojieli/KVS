@@ -75,8 +75,9 @@
 #include "hashtable/put/dma_wr_req_merger.cpp"
 #include "hashtable/put/offline_handler.cpp"
 #include "hashtable/put/line_fetcher.cpp"
-#include "hashtable/put/comparator.cpp"
 #include "hashtable/put/newline_handler.cpp"
+#include "hashtable/put/comparator_pipeline_one.cpp"
+#include "hashtable/put/comparator_pipeline_two.cpp"
 /**********************************/
 
 /**********************************/
@@ -899,9 +900,9 @@ int main() {
   boost::thread t_hashtable_put_dma_wr_req_merger(&hashtable_put_dma_wr_req_merger);
   boost::thread t_hashtable_put_offline_handler(&hashtable_put_offline_handler);
   boost::thread t_hashtable_put_line_fetcher(&hashtable_put_line_fetcher);
-  boost::thread t_hashtable_put_comparator(&hashtable_put_comparator);
   boost::thread t_hashtable_put_newline_handler(&hashtable_put_newline_handler);
-  boost::thread t_hashtable_line_fetcher_dma_rd_handler(&hashtable_line_fetcher_dma_rd_handler);
+  boost::thread t_hashtable_put_comparator_pipeline_one(&hashtable_put_comparator_pipeline_one);
+  boost::thread t_hashtable_put_comparator_pipeline_two(&hashtable_put_comparator_pipeline_two);
 
   boost::thread t_hashtable_add_comparator(hashtable_add_comparator);
   boost::thread t_hashtable_add_line_fetcher(hashtable_add_line_fetcher);
@@ -910,7 +911,9 @@ int main() {
   boost::thread t_hashtable_add_adder(hashtable_add_adder);
   boost::thread t_hashtable_add_res_merger(hashtable_add_res_merger);
   boost::thread t_hashtable_add_dma_wr_req_merger(hashtable_add_dma_wr_req_merger);
-  
+
+  boost::thread t_hashtable_line_fetcher_dma_rd_handler(&hashtable_line_fetcher_dma_rd_handler);
+
   boost::thread t_test(&test);
   
   t_host_dma_simulator0.join();

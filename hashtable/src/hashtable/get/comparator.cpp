@@ -39,7 +39,7 @@ hashtable_get_comparator() {
       line_5B_metadata[7] = line_in_uchar[54] & 31;
       line_5B_metadata[8] = line_in_uchar[55] >> 3;
       line_5B_metadata[9] = ((line_in_uchar[55] & 7) << 2) | (line_in_uchar[56] >> 6);
-
+      
       bool offline_found = false;
       uchar offline_found_slab_type;
       ulong offline_found_val_addr;
@@ -93,7 +93,8 @@ hashtable_get_comparator() {
 	  is_true[3] = (((uchar)(line_5B_metadata[i] << 3)) >> 4) & 1;
 	  is_true[4] = (((uchar)(line_5B_metadata[i] << 4)) >> 4) & 1;
 	  
-	  is_true[5] = (line_5B_metadata[i + 1] >> 4) & 1;
+	  is_true[5] = (line_5B_metadata
+[i + 1] >> 4) & 1;
 	  is_true[6] = (((uchar)(line_5B_metadata[i + 1] << 1)) >> 4) & 1;
 	  is_true[7] = (((uchar)(line_5B_metadata[i + 1] << 2)) >> 4) & 1;
 	  is_true[8] = (((uchar)(line_5B_metadata[i + 1] << 3)) >> 4) & 1;
@@ -145,10 +146,13 @@ hashtable_get_comparator() {
 		    line_key_in_uchar[j] = 0;
 		  }
 		}
-
+		
 #pragma unroll
 		for (int j = 0; j < 12; j ++) {
 		  if (key_in_uchar[j] != line_key_in_uchar[j]) {
+		    if (i == 7) {
+		      cout << j << " " << key_in_uchar[j] << " " << line_key_in_uchar[j] << endl;
+		    }
 		    inline_found_slots[i] = false;
 		  }
 		}		

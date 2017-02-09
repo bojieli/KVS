@@ -62,7 +62,9 @@ slab_besides_return() {
   tmp.y = slab_end_addr;
   dummy = write_channel_nb_altera(init_hashtable_del_comparator, tmp);
   assert(dummy);
-  dummy = write_channel_nb_altera(init_hashtable_put_comparator, tmp);
+  dummy = write_channel_nb_altera(init_hashtable_put_comparator_pipeline_one, tmp);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_hashtable_put_comparator_pipeline_two, tmp);
   assert(dummy);
   dummy = write_channel_nb_altera(init_hashtable_add_comparator, tmp);
   assert(dummy);

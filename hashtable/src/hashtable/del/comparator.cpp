@@ -8,8 +8,8 @@ hashtable_del_comparator() {
     bool should_write_hashtable_del_slab_return_req_offline = false;
     SlabReturn val_write_hashtable_del_slab_return_req_offline;
 
-    bool should_write_hashtable_del_slab_return_req_line = false;
-    SlabReturn val_write_hashtable_del_slab_return_req_line;
+    bool should_write_hashtable_del_hashtable_del_slab_return_req_line = false;
+    SlabReturn val_write_hashtable_del_hashtable_del_slab_return_req_line;
 
     bool should_write_hashtable_del_dma_wr_req_0 = false;
     DMA_WriteReq_Compressed val_write_hashtable_del_dma_wr_req_0;
@@ -448,8 +448,8 @@ hashtable_del_comparator() {
 	  slabReturn.slab_size = 64;
 	  slabReturn.slab_addr = (req.hash1 << 6) + slab_start_addr;
 	  
-	  should_write_hashtable_del_slab_return_req_line = true;
-	  val_write_hashtable_del_slab_return_req_line = slabReturn;
+	  should_write_hashtable_del_hashtable_del_slab_return_req_line = true;
+	  val_write_hashtable_del_hashtable_del_slab_return_req_line = slabReturn;
 	  
 	  req.last_half_line_data.w = ((req.last_half_line_data.w >> 32) << 32) | (wr_data_in_ulong[3] & 0xFFFFFFFF);
 	  DMA_WriteReq_Compressed wr_req_compressed;
@@ -526,8 +526,8 @@ hashtable_del_comparator() {
 	assert(dummy);
       }
 
-      if (should_write_hashtable_del_slab_return_req_line) {
-	bool dummy = write_channel_nb_altera(hashtable_del_slab_return_req_line, val_write_hashtable_del_slab_return_req_line);
+      if (should_write_hashtable_del_hashtable_del_slab_return_req_line) {
+	bool dummy = write_channel_nb_altera(hashtable_del_hashtable_del_slab_return_req_line, val_write_hashtable_del_hashtable_del_slab_return_req_line);
 	assert(dummy);
       }
       

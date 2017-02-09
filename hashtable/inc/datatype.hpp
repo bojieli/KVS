@@ -154,3 +154,9 @@ typedef struct SlabRequest {
   uchar cmd;
   ushort slab_size;
 }SlabRequest;
+
+typedef struct PutComparatorIntermInfo {
+  uchar line[64];
+  PutReq req;
+  bool line_updated;
+}PutComparatorIntermInfo;

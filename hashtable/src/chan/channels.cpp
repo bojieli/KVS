@@ -1,4 +1,4 @@
-// hashtable/put/comparator -> hashtable/put/newline_handler
+// hashtable/put/comparator_pipeline_two -> hashtable/put/newline_handler
 decl_channel(PutNewlineType, 128, put_newline_handler);
 // slab/dma_rd_req_merger -> dma/rd_manager
 decl_channel(DMA_ReadReq_Compressed, 128, slab_dma_rd_req);
@@ -64,9 +64,9 @@ decl_channel(DMA_ReadReq_Compressed, 1, slab_bin_dma_rd_req[SLAB_BIN_COUNT]);
 decl_channel(SlabRequest, 128, slab_besides_return_req);
 // pcie/rx -> slab/besides_return_req_merger
 decl_channel(SlabRequest, 128, host_slab_besides_return_req);
-// hashtable/put/comparator -> slab/besides_return_req_merger
+// hashtable/put/comparator_pipeline_two -> slab/besides_return_req_merger
 decl_channel(SlabRequest, 128, hashtable_put_offline_slab_req);
-// hashtable/put/comparator -> hashtable/put/dma_wr_req_merger
+// hashtable/put/comparator_pipeline_two -> hashtable/put/dma_wr_req_merger
 decl_channel(SlabRequest, 128, hashtable_put_newline_slab_req);
 // slab/besides_return -> slab/besides_return_req_merger
 decl_channel(ulong, 128, slab_besides_return_res);
@@ -76,12 +76,12 @@ decl_channel(ulong, 128, slab_besides_return_res_newline);
 decl_channel(ulong, 128, slab_besides_return_res_offline);
 // src/hashtable/del/slab_return_req_merger -> src/slab/return
 decl_channel(SlabReturn, 128, slab_return_req);
-// src/hashtable/put/comparator -> slab/return_req_merger
+// src/hashtable/put/comparator_pipeline_one -> slab/return_req_merger
 decl_channel(SlabReturn, 128, hashtable_put_slab_return_req_offline);
 // src/hashtable/del/comparator -> slab/return_req_merger
 decl_channel(SlabReturn, 128, hashtable_del_slab_return_req_offline);
 // src/hashtable/del/comparator -> src/hashtable/del/slab_return_req_merger 
-decl_channel(SlabReturn, 128, hashtable_del_slab_return_req_line);
+decl_channel(SlabReturn, 128, hashtable_del_hashtable_del_slab_return_req_line);
 // slab/besides_return_req_merger -> slab/besides_return_req_merger
 decl_channel(uchar, 128, slab_besides_return_req_context);
 // slab/besides_return -> slab/return
@@ -132,41 +132,43 @@ decl_channel(DelReq, 256, fetching_del_req);
 decl_channel(DMA_ReadReq_Compressed, 128, line_fetcher_del_dma_rd_req);
 // hashtable/line_fetcher/line_fetcher_rd_handler -> hashtable/del/comparator 
 decl_channel(ulong8, 256, line_fetcher_del_dma_rd_res);
-// hashtable/del/dma_wr_req_merger -> dma/wr_manager.cpp
+// hashtable/del/dma_wr_req_merger -> hashtable/dma_wr_req_merger/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed, 256, hashtable_del_dma_wr_req);
 // hashtable/del/comparator -> hashtable/del/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed, 256, hashtable_del_dma_wr_req_0);
 // hashtable/del/comparator -> hashtable/del/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed, 256, hashtable_del_dma_wr_req_1);
-// hashtable/put/comparator -> hashtable/put/line_fetcher
+// hashtable/put/comparator_pipeline_two -> hashtable/put/line_fetcher
 decl_channel(PutReq, 256, return_put_req);
 // hashtable/put/newline_handler -> hashtable/put/line_fetcher
 decl_channel(PutReq, 256, newline_put_req);
-// hashtable/put/line_fetcher -> hashtable/put/comparator
+// hashtable/put/line_fetcher -> hashtable/put/comparator_pipeline_one
 decl_channel(PutReq, 256, fetching_put_req);
-// hashtable/put/comparator -> hashtable/put/offline_handler
+// hashtable/put/comparator_pipeline_two -> hashtable/put/offline_handler
 decl_channel(PutOfflineType, 256, put_offline_handler);
 // hashtable/put/line_fetcher -> hashtable/line_fetcher/line_fetcher_rd_handler
 decl_channel(DMA_ReadReq_Compressed, 128, line_fetcher_put_dma_rd_req);
-// hashtable/line_fetcher/line_fetcher_rd_handler -> hashtable/put/comparator
+// hashtable/line_fetcher/line_fetcher_rd_handler -> hashtable/put/comparator_pipeline_one
 decl_channel(ulong8, 256, line_fetcher_put_dma_rd_res);
 // slab/besides_return -> hashtable/put/line_fetcher
 decl_channel(ulong2, 1, init_hashtable_put_line_fetcher);
-// slab/besides_return -> hashtable/put/comparator
-decl_channel(ulong2, 1, init_hashtable_put_comparator);
+// slab/besides_return -> hashtable/put/comparator_pipeline_one
+decl_channel(ulong2, 1, init_hashtable_put_comparator_pipeline_one);
+// slab/besides_return -> hashtable/put/comparator_pipeline_two
+decl_channel(ulong2, 1, init_hashtable_put_comparator_pipeline_two);
 // hashtable/put/newline_handler -> hashtable/put/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed, 256, hashtable_put_newline_dma_wr_req);
-// hashtable/put/comparator -> hashtable/put/dma_wr_req_merger
+// hashtable/put/comparator_pipeline_two -> hashtable/put/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed_Double, 128, hashtable_put_inline_dma_wr_req_double);
 // hashtable/put/offline_handler -> hashtable/put/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed_Double, 128, hashtable_put_offline_update_line_dma_wr_req_double);
 // hashtable/put/offline_handler -> hashtable/put/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed_Double, 128, hashtable_put_offline_update_slab_dma_wr_req_double);
-// hashtable/put/comparator -> hashtable/put/res_merger
+// hashtable/put/comparator_two -> hashtable/put/res_merger
 decl_channel(PutRes, 256, put_inline_res);
 // hashtable/put/offline_handler -> hashtable/put/res_merger
 decl_channel(PutRes, 256, put_offline_res);
-// hashtable/put/dma_wr_req_merger -> dma/wr_manager
+// hashtable/put/dma_wr_req_merger -> hashtable/dma_wr_req_merger/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed, 256, hashtable_put_dma_wr_req);
 // slab/besides_return -> hashtable/put/newline_handler
 decl_channel(ulong2, 1, init_hashtable_put_newline_handler);
@@ -218,9 +220,11 @@ decl_channel(AddRes, 256, add_offline_res);
 decl_channel(DMA_WriteReq_Compressed_Double, 256, hashtable_add_inline_update_line_dma_wr_req_double);
 // hashtable/add/adder -> hashtable/add/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed, 256, hashtable_add_offline_update_slab_dma_wr_req);
-// hashtable/add/dma_wr_req_merger -> dma/wr_manager
+// hashtable/add/dma_wr_req_merger -> hashtable/dma_wr_req_merger/dma_wr_req_merger
 decl_channel(DMA_WriteReq_Compressed, 256, hashtable_add_dma_wr_req);
 // hashtable/add/comparator -> dma/rd_manager
 decl_channel(DMA_ReadReq_Compressed, 128, slab_fetcher_add_offline_dma_rd_req);
 // dma/rd_manager -> hashtable/add/offline_handler
 decl_channel(ulong4, 256, slab_fetcher_add_offline_dma_rd_res);
+// hashtable/put/comparator_pipeline_one -> hashtable/put/comparator_pipeline_two
+decl_channel(PutComparatorIntermInfo, 256, put_comparator_interm_info);

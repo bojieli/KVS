@@ -75,8 +75,9 @@
 #include "hashtable/put/dma_wr_req_merger.cpp"
 #include "hashtable/put/offline_handler.cpp"
 #include "hashtable/put/line_fetcher.cpp"
-#include "hashtable/put/comparator.cpp"
 #include "hashtable/put/newline_handler.cpp"
+#include "hashtable/put/comparator_pipeline_one.cpp"
+#include "hashtable/put/comparator_pipeline_two.cpp"
 /**********************************/
 
 /**********************************/

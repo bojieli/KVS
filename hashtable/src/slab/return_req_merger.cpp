@@ -4,7 +4,7 @@ slab_return_req_merger() {
     bool read_slab_return_req;
     SlabReturn val_slab_return_req;
 
-    val_slab_return_req = read_channel_nb_altera(hashtable_del_slab_return_req_line, &read_slab_return_req);
+    val_slab_return_req = read_channel_nb_altera(hashtable_del_hashtable_del_slab_return_req_line, &read_slab_return_req);
     if (!read_slab_return_req) {
       val_slab_return_req = read_channel_nb_altera(hashtable_del_slab_return_req_offline, &read_slab_return_req);
       if (!read_slab_return_req) {

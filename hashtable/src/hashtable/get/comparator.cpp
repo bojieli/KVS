@@ -150,9 +150,6 @@ hashtable_get_comparator() {
 #pragma unroll
 		for (int j = 0; j < 12; j ++) {
 		  if (key_in_uchar[j] != line_key_in_uchar[j]) {
-		    if (i == 7) {
-		      cout << j << " " << key_in_uchar[j] << " " << line_key_in_uchar[j] << endl;
-		    }
 		    inline_found_slots[i] = false;
 		  }
 		}		

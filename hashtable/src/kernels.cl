@@ -53,6 +53,7 @@
 #include "slab/dma_wr_handler.cpp"
 #include "slab/besides_return.cpp"
 #include "slab/return.cpp"
+#include "slab/return_req_merger.cpp"
 /**********************************/
 
 /**********************************/
@@ -67,7 +68,6 @@
 #include "hashtable/del/dma_wr_req_merger.cpp"
 #include "hashtable/del/line_fetcher.cpp"
 #include "hashtable/del/comparator.cpp"
-#include "hashtable/del/slab_return_req_merger.cpp"
 /**********************************/
 
 /**********************************/

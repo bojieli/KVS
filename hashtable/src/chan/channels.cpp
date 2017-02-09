@@ -12,15 +12,15 @@ decl_channel(DmaReadReqWithId, 128, slab_non_init_dma_rd_req_with_id);
 decl_channel(DmaContext, 128, slab_dma_handler_rd_req_context);
 // hashtable/line_fetcher/line_fetcher_rd_handler -> dma/rd_manager
 decl_channel(DMA_ReadReq_Compressed, 128, line_fetcher_dma_rd_req);
-// TODO
+// dma/rd_manager -> dma/rd_mux
 decl_channel(ulong8, 256, dma_rd_req);
-// TODO
+// dma/rd_demux -> dma/rd_manager
 #ifdef _CSIM
 decl_channel(ulong4, 4096, dma_rd_res);
 #else
 decl_channel(ulong4, 256, dma_rd_res);
 #endif
-// TODO
+// dma/wr_manager -> dma/wr_mux
 decl_channel(ulong8, 256, dma_wr_req);
 // fpga -> host
 decl_channel(ulong8, 256, dma1_rd_req);
@@ -34,7 +34,7 @@ decl_channel(ulong8, 256, dma0_rd_req);
 decl_channel(ulong4, 256, dma0_rd_res);
 // fpga -> host
 decl_channel(ulong8, 256, dma0_wr_req);
-// TODO
+// dma/rd_mux -> dma/rd_demux
 decl_channel(ushort, 256, dma_rd_req_size);
 // slab/dma_wr_handler -> dma/wr_manager   
 decl_channel(DMA_WriteReq_Compressed, 512, slab_dma_wr_req);
@@ -44,7 +44,7 @@ decl_channel(DMA_WriteReq_Compressed, 128, slab_bin_dma_wr_req[SLAB_BIN_COUNT]);
 decl_channel(ulong4, 128, line_fetcher_dma_rd_res);
 // dma/rd_manager -> slab/dma_rd_handler
 #ifdef _CSIM
-decl_channel(ulong4, 1024, slab_dma_rd_res);
+decl_channel(ulong4, 4096, slab_dma_rd_res);
 #else
 decl_channel(ulong4, 256, slab_dma_rd_res);
 #endif
@@ -76,10 +76,12 @@ decl_channel(ulong, 128, slab_besides_return_res_newline);
 decl_channel(ulong, 128, slab_besides_return_res_offline);
 // src/hashtable/del/slab_return_req_merger -> src/slab/return
 decl_channel(SlabReturn, 128, slab_return_req);
-// src/hashtable/del/comparator -> src/hashtable/del/slab_return_req_merger
-decl_channel(SlabReturn, 128, slab_return_req_offline_slab);
+// src/hashtable/put/comparator -> slab/return_req_merger
+decl_channel(SlabReturn, 128, hashtable_put_slab_return_req_offline);
+// src/hashtable/del/comparator -> slab/return_req_merger
+decl_channel(SlabReturn, 128, hashtable_del_slab_return_req_offline);
 // src/hashtable/del/comparator -> src/hashtable/del/slab_return_req_merger 
-decl_channel(SlabReturn, 128, slab_return_req_line);
+decl_channel(SlabReturn, 128, hashtable_del_slab_return_req_line);
 // slab/besides_return_req_merger -> slab/besides_return_req_merger
 decl_channel(uchar, 128, slab_besides_return_req_context);
 // slab/besides_return -> slab/return

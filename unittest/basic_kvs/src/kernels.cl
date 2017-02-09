@@ -54,6 +54,7 @@
 #include "slab/dma_wr_handler.cpp"
 #include "slab/besides_return.cpp"
 #include "slab/return.cpp"
+#include "slab/return_req_merger.cpp"
 /**********************************/
 
 /**********************************/
@@ -67,7 +68,6 @@
 #include "hashtable/del/dma_wr_req_merger.cpp"
 #include "hashtable/del/line_fetcher.cpp"
 #include "hashtable/del/comparator.cpp"
-#include "hashtable/del/slab_return_req_merger.cpp"
 /**********************************/
 
 /**********************************/
@@ -1818,6 +1818,7 @@ int main() {
   boost::thread t_slab_dma_wr_handler(&slab_dma_wr_handler);
   boost::thread t_slab_besides_return(&slab_besides_return); 
   boost::thread t_slab_return(&slab_return);
+  boost::thread t_slab_return_req_merger(&slab_return_req_merger);
 
   boost::thread t_hashtable_get_comparator(&hashtable_get_comparator);
   boost::thread t_hashtable_get_line_fetcher(&hashtable_get_line_fetcher);
@@ -1826,7 +1827,6 @@ int main() {
 
   boost::thread t_hashtable_del_comparator(&hashtable_del_comparator);
   boost::thread t_hashtable_del_dma_wr_req_merger(&hashtable_del_dma_wr_req_merger);  
-  boost::thread t_hashtable_del_slab_return_req_merger(&hashtable_del_slab_return_req_merger);
   boost::thread t_hashtable_del_line_fetcher(&hashtable_del_line_fetcher);
   
   boost::thread t_hashtable_put_res_merger(&hashtable_put_res_merger);

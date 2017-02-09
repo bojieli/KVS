@@ -22,6 +22,8 @@ typedef struct PutReq {
   ulong4 val;
   uint hash1;
   uint hash2;
+  bool del_fin;
+  bool ins_fin;
   bool has_last; // *
 }PutReq;
 

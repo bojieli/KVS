@@ -5,7 +5,6 @@
 #ifdef _CSIM
 #define _CL_VOID void
 #include <cassert>
-#include <pthread.h>
 #include "sim/channel.cpp"
 #include "../inc/cl_platform.h"
 #define decl_channel(TYPE, DEPTH, NAME) channel<TYPE, DEPTH> NAME
@@ -24,11 +23,22 @@
 #include "../inc/dmawritereq.h"
 #include "../inc/dmareadreq.h"
 #include "../inc/dmareadres.h"
+#include "../inc/memreadreq.h"
+#include "../inc/memreadres.h"
+#include "../inc/memwritereq.h"
+#include "../inc/cachefunc.h"
 #include "../inc/constant.hpp"
 #include "../inc/datatype.hpp"
 #include "../inc/hashfunc.hpp"
 #include "../inc/unroll.hpp"
 /**********************************/
+
+typedef struct __attribute__((packed)) {
+  ulong8 data;
+  ulong flag;
+}DramDataType;
+
+DramDataType *dram;
 
 /**********************************/
 #include "chan/channels.cpp"
@@ -62,6 +72,7 @@
 #include "hashtable/get/line_fetcher.cpp"
 #include "hashtable/get/res_merger.cpp"
 #include "hashtable/get/offline_handler.cpp"
+#include "hashtable/get/array_req_generator.cpp"
 /**********************************/
 
 /**********************************/
@@ -81,7 +92,30 @@
 /**********************************/
 
 /**********************************/
+#include "hashtable/add/comparator.cpp"
+#include "hashtable/add/line_fetcher.cpp"
+#include "hashtable/add/array_req_generator.cpp"
+#include "hashtable/add/offline_handler.cpp"
+#include "hashtable/add/adder.cpp"
+#include "hashtable/add/res_merger.cpp"
+#include "hashtable/add/dma_wr_req_merger.cpp"
+/**********************************/
+
+/**********************************/
 #include "hashtable/line_fetcher/line_fetcher_rd_handler.cpp"
+/**********************************/
+
+/**********************************/
+#include "cache/cache_res_merger.cpp"
+#include "cache/dram_line_comparator.cpp"
+#include "cache/dram_writer.cpp"
+#include "cache/dma_rd_filter.cpp"
+#include "cache/dram_wr_req_splitter.cpp"
+#include "cache/dma_res_merger.cpp"
+#include "cache/dram_rd_mux.cpp"
+#include "cache/redirect_pcie_wr_req_formatter.cpp"
+#include "cache/dma_wr_filter.cpp"
+#include "cache/dram_rd_req_splitter.cpp"
 /**********************************/
 
 #ifdef _CSIM
@@ -100,16 +134,44 @@ ulong host_slab_return_table_base_addr[SLAB_BIN_COUNT];
 uint* host_slab_available_table;
 uint host_slab_available_tail_ptr[SLAB_BIN_COUNT];
 
+void dram_simulator() {
+  while (1) {
+    bool read_mem_rdreq;
+    Mem_ReadReq mem_rdreq;
+    mem_rdreq = read_channel_nb_altera(mem_rd_req, &read_mem_rdreq);
+    if (read_mem_rdreq) {
+      DramDataType dramData = dram[mem_rdreq.address];
+      Mem_ReadRes mem_rdres;
+      mem_rdres.data = dramData.data;
+      mem_rdres.flag = dramData.flag;
+      bool dummy = write_channel_nb_altera(mem_rd_res, mem_rdres);
+      assert(dummy);
+    }
+
+    bool read_mem_wrreq;
+    Mem_WriteReq mem_wrreq;
+    mem_wrreq = read_channel_nb_altera(mem_wr_req, &read_mem_wrreq);
+    if (read_mem_wrreq) {
+      DramDataType dramData;
+      dramData.data = mem_wrreq.data;
+      dramData.flag = mem_wrreq.flag;
+      dram[mem_wrreq.address] = dramData;
+    }
+  }
+}
+
 // BIN size: 32B, 64B, 128B, 256B, 512B
 void
-host_init() {  
+host_init() {
+  dram = (DramDataType *)malloc(1ULL << 32);
+  host_slab_available_table = (uint *)malloc(1024ULL * 1024 * 1024 * 64);
+  memset(dram, 0, sizeof(dram));
+  memset(host_slab_available_table, 0, sizeof(host_slab_available_table));
+  
   ulong slab_start_addr, slab_end_addr;
     
   // allocate space for slab table
   host_slab_available_table = (uint *)malloc(1024ULL * 1024 * 1024 * 64);
-  while (((ulong)host_slab_available_table) % 32 != 0) {
-    host_slab_available_table ++;
-  }
   if (!host_slab_available_table) {
     cout << "mem allocate failed!" << endl;
     exit(0);
@@ -481,15 +543,52 @@ void host_routine() {
   }
 }
 
+inline void string2key(string s, uchar &key_size, ulong4 &key) {
+  assert(s.size() <= 32);
+  key_size = s.size();
+  uchar key_slice[32];
+  for (int i = 0; i < 32; i ++) {
+    if (i < s.size()) {
+      key_slice[i] = s[i];
+    }
+    else {
+      key_slice[i] = 0;
+    }
+  }
+  ulong tmp[4];
+  for (int i = 0; i < 4; i ++) {
+    tmp[i] =
+      ((ulong)key_slice[0 + (i << 3)]) << 56 |
+      ((ulong)key_slice[1 + (i << 3)]) << 48 |
+      ((ulong)key_slice[2 + (i << 3)]) << 40 |
+      ((ulong)key_slice[3 + (i << 3)]) << 32 |
+      ((ulong)key_slice[4 + (i << 3)]) << 24 |
+      ((ulong)key_slice[5 + (i << 3)]) << 16 |
+      ((ulong)key_slice[6 + (i << 3)]) << 8 |
+      ((ulong)key_slice[7 + (i << 3)]) << 0;
+  }
+  ulong4 ret;
+  key.x = tmp[0];
+  key.y = tmp[1];
+  key.z = tmp[2];
+  key.w = tmp[3];
+}
+
+bool operator ==(ulong4 v1, ulong4 v2) {
+  return v1.x == v2.x && v1.y == v2.y && v1.z == v2.z && v1.w == v2.w;
+}
+
 void test() {
   PutReq put_req;
   PutRes put_res;
+  AddReq add_req;
+  AddRes add_res;
   GetReq get_req;
   GetRes get_res;
   DelReq del_req;
   DelRes del_res;
   uint hash1bak;
-
+  
   // inline put
   put_req.key_size = 6;
   put_req.key.x = 0x7582754283870000;
@@ -505,7 +604,7 @@ void test() {
   put_req.val.w = 0;
   put_req.has_last = 0;
   write_channel_altera(input_put_req, put_req);
-  usleep(100000);
+  usleep(200000);
 
   put_res = read_channel_altera(output_put_res);
   assert(put_res.found);
@@ -527,30 +626,27 @@ void test() {
   assert(get_res.key.x == 0x7582754283870000);
   assert(get_res.val_size == 4);
   assert(get_res.val.x == 0x6838129400000000);
-  usleep(100000);
-
-  // inline put
-  put_req.key_size = 6;
-  put_req.key.x = 0x7582754283870000;
-  put_req.key.y = 0;
-  put_req.key.z = 0;
-  put_req.key.w = 0;
-  put_req.hash1 = hash_func1(&put_req.key);
-  put_req.hash2 = hash_func2(&put_req.key);
-  put_req.val_size = 4;
-  put_req.val.x = 0x6838129500000000;
-  put_req.val.y = 0;
-  put_req.val.z = 0;
-  put_req.val.w = 0;
-  put_req.has_last = 0;
-  write_channel_altera(input_put_req, put_req);
-  usleep(100000);
-
-  put_res = read_channel_altera(output_put_res);
-  assert(put_res.found);
-  assert(put_res.key_size == 6);
-  assert(put_res.key.x == 0x7582754283870000);
-
+  
+  // inline add
+  add_req.key_size = 6;
+  add_req.key.x = 0x7582754283870000;
+  add_req.key.y = 0;  
+  add_req.key.z = 0;
+  add_req.key.w = 0;
+  add_req.hash1 = hash_func1(&add_req.key);
+  add_req.hash2 = hash_func2(&add_req.key);
+  add_req.delta = 1;
+  add_req.has_last = 0;
+  add_req.is_array = 0;
+  add_req.is_array_first = 0;
+  write_channel_altera(input_add_req, add_req);
+  
+  add_res = read_channel_altera(output_add_res);
+  assert(add_res.found);
+  assert(add_res.key_size == 6);
+  assert(add_res.key.x == 0x7582754283870000);
+  usleep(200000);
+    
   // inline get
   get_req.is_array_first = 0;
   get_req.key_size = 6;
@@ -559,14 +655,252 @@ void test() {
   get_req.hash2 = hash_func2(&put_req.key);
   get_req.has_last = 0;
   write_channel_altera(input_get_req, get_req);
-  
+
   get_res = read_channel_altera(output_get_res);
   assert(get_res.found);
   assert(get_res.key_size == 6);
   assert(get_res.key.x == 0x7582754283870000);
   assert(get_res.val_size == 4);
   assert(get_res.val.x == 0x6838129500000000);
-  usleep(100000);
+  usleep(200000);
+
+  // offline put
+  put_req.key_size = 14;
+  put_req.key.x = 0x5858282843850938;
+  put_req.key.y = 0x9483736561720000;
+  put_req.key.z = 0;
+  put_req.key.w = 0;
+  put_req.hash1 = hash_func1(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
+  put_req.val_size = 4;
+  put_req.val.x = 0x7858278400000000;
+  put_req.val.y = 0;
+  put_req.val.z = 0;
+  put_req.val.w = 0;
+  put_req.has_last = 0;
+  write_channel_altera(input_put_req, put_req);
+  usleep(200000);
+  
+  put_res = read_channel_altera(output_put_res);
+  assert(put_res.found);
+  assert(put_res.key_size == 14);
+  assert(put_res.key.x == 0x5858282843850938);
+  assert(put_res.key.y == 0x9483736561720000);
+  assert(put_res.key.z == 0);
+  assert(put_res.key.w == 0);
+  usleep(200000);
+
+  // offline add
+  add_req.key_size = 14;
+  add_req.key.x = 0x5858282843850938;
+  add_req.key.y = 0x9483736561720000; 
+  add_req.key.z = 0;
+  add_req.key.w = 0;
+  add_req.hash1 = hash_func1(&add_req.key);
+  add_req.hash2 = hash_func2(&add_req.key);
+  add_req.delta = 2;
+  add_req.has_last = 0;
+  add_req.is_array = 0;
+  add_req.is_array_first = 0;
+  write_channel_altera(input_add_req, add_req);
+
+  add_res = read_channel_altera(output_add_res);
+  assert(add_res.found);      
+  assert(add_res.key_size == 14);
+  assert(add_res.key.x == 0x5858282843850938);
+  assert(add_res.key.y == 0x9483736561720000);
+  assert(add_res.key.z == 0);
+  assert(add_res.key.w == 0);
+  usleep(200000);
+
+  // offline get
+  get_req.is_array_first = 0;
+  get_req.key_size = 14;
+  get_req.key.x = 0x5858282843850938;
+  get_req.key.y = 0x9483736561720000;
+  get_req.key.z = 0;
+  get_req.key.w = 0;
+  get_req.hash1 = hash_func1(&get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
+  get_req.has_last = 0;
+  write_channel_altera(input_get_req, get_req);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.found);
+  assert(get_res.key_size == 14);
+  assert(get_res.key.x == 0x5858282843850938);
+  assert(get_res.key.y == 0x9483736561720000);
+  assert(get_res.key.z == 0);
+  assert(get_res.key.w == 0);
+  assert(get_res.val_size == 4);
+  assert(get_res.val.x == 0x7858278600000000);
+
+  //**********CUT HERE************
+  uchar req_key_size;
+  ulong4 req_key;
+
+  // array put
+  string2key("$arr", put_req.key_size, put_req.key);  
+  req_key_size = put_req.key_size;
+  req_key = put_req.key; 
+  put_req.hash1 = hash_func1(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
+  
+  put_req.val_size = 86;  
+  put_req.val.x = 0x0002129417387585;
+  put_req.val.y = 0x1949682545784392;
+  put_req.val.z = 0x4997828158829187;
+  put_req.val.w = 0x9384761258689146;
+  put_req.has_last = 0;
+  write_channel_altera(input_put_req, put_req);
+  
+  put_req.val.x = 0x9585682577991746;
+  put_req.val.y = 0x2848568919298487;
+  put_req.val.z = 0x4294869585869813;
+  put_req.val.w = 0x1905968645861374;
+  write_channel_altera(input_put_req, put_req);
+
+  put_req.val.x = 0x2359685484210960;
+  put_req.val.y = 0x5482828355819838;
+  put_req.val.z = 0x8829486553320000;
+  put_req.val.w = 0;
+  write_channel_altera(input_put_req, put_req);
+  usleep(200000);
+
+  put_res = read_channel_altera(output_put_res);
+  assert(put_res.found);
+  assert(put_res.key_size == req_key_size);
+  assert(put_res.key == req_key);
+
+  string2key("$arr1", put_req.key_size, put_req.key);  
+  req_key_size = put_req.key_size;
+  req_key = put_req.key; 
+  put_req.hash1 = hash_func1(&put_req.key);
+  put_req.hash2 = hash_func2(&put_req.key);
+  
+  put_req.val_size = 32;  
+  put_req.val.x = 0x3423423282184374;
+  put_req.val.y = 0x9584716326546548;
+  put_req.val.z = 0x1838485868678728;
+  put_req.val.w = 0x7982945692434864;
+  put_req.has_last = 0;
+  write_channel_altera(input_put_req, put_req);
+  usleep(200000);
+  
+  put_res = read_channel_altera(output_put_res);
+  assert(put_res.found);
+  assert(put_res.key_size == req_key_size);
+  assert(put_res.key == req_key);  
+
+  // array get 
+  string2key("$arr", get_req.key_size, get_req.key);  
+  req_key_size = get_req.key_size;
+  req_key = get_req.key; 
+  get_req.hash1 = hash_func1(&get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
+  get_req.has_last = false;
+  get_req.is_array_first = true;
+  
+  write_channel_altera(input_get_req, get_req);
+  usleep(200000);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.found);
+  assert(get_res.key_size == req_key_size);
+  assert(get_res.key == req_key);
+  
+  assert(get_res.val_size == 86);
+  assert(get_res.val.x == 0x0002129417387585);
+  assert(get_res.val.y == 0x1949682545784392);
+  assert(get_res.val.z == 0x4997828158829187);
+  assert(get_res.val.w == 0x9384761258689146);
+  
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.val.x == 0x9585682577991746);
+  assert(get_res.val.y == 0x2848568919298487);
+  assert(get_res.val.z == 0x4294869585869813);
+  assert(get_res.val.w == 0x1905968645861374); 
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.val.x == 0x2359685484210960);
+  assert(get_res.val.y == 0x5482828355819838);
+  assert(get_res.val.z == 0x8829486553320000);
+  assert(get_res.val.w == 0);
+  
+  get_res = read_channel_altera(output_get_res);
+
+  string2key("$arr1", req_key_size, req_key);
+  assert(get_res.found);
+  assert(get_res.key_size == req_key_size);
+  assert(get_res.key == req_key);
+  assert(get_res.val_size == 32);
+  
+  assert(get_res.val.x == 0x3423423282184374);
+  assert(get_res.val.y == 0x9584716326546548);
+  assert(get_res.val.z == 0x1838485868678728);
+  assert(get_res.val.w == 0x7982945692434864);
+  usleep(200000);
+
+  // array add
+  string2key("$arr", add_req.key_size, add_req.key);  
+  req_key_size = add_req.key_size;
+  req_key = add_req.key; 
+  add_req.hash1 = hash_func1(&add_req.key);
+  add_req.hash2 = hash_func2(&add_req.key);
+  add_req.delta = 1;
+  add_req.has_last = 0;
+  add_req.is_array_first = 1;
+  write_channel_altera(input_add_req, add_req);
+  usleep(200000);
+  
+  add_res = read_channel_altera(output_add_res);
+  assert(add_res.found);
+  assert(add_res.key_size == req_key_size);
+  assert(add_res.key == req_key);
+
+  // array get 
+  string2key("$arr", get_req.key_size, get_req.key);  
+  req_key_size = get_req.key_size;
+  req_key = get_req.key; 
+  get_req.hash1 = hash_func1(&get_req.key);
+  get_req.hash2 = hash_func2(&get_req.key);
+  get_req.has_last = false;
+  get_req.is_array_first = true;
+  write_channel_altera(input_get_req, get_req);
+  usleep(200000);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.found);
+  assert(get_res.key_size == req_key_size);
+  assert(get_res.key == req_key);
+  
+  assert(get_res.val_size == 86);
+  assert(get_res.val.x == 0x0002129417397585);
+  assert(get_res.val.y == 0x194a682545794392);
+  assert(get_res.val.z == 0x4998828158839187);
+  assert(get_res.val.w == 0x9385761258699146);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.val.x == 0x95866825779a1746);
+  assert(get_res.val.y == 0x28495689192a8487);
+  assert(get_res.val.z == 0x4295869585879813);
+  assert(get_res.val.w == 0x1906968645871374);
+
+  get_res = read_channel_altera(output_get_res);
+  assert(get_res.val.x == 0x235a685484220960);
+  assert(get_res.val.y == 0x5483828355829838);
+  assert(get_res.val.z == 0x882a486553330000);
+  assert(get_res.val.w == 0);
+
+  get_res = read_channel_altera(output_get_res);
+  string2key("$arr1", req_key_size, req_key);
+  assert(get_res.key_size == req_key_size);
+  assert(get_res.key == req_key);
+
+  assert(get_res.val.x == 0x3423423382184375);
+  assert(get_res.val.y == 0x9584716426546549);
+  assert(get_res.val.z == 0x1838485968678729);
+  assert(get_res.val.w == 0x7982945792434865);
   
   cout << "passed" << endl;
 }
@@ -587,7 +921,7 @@ int main() {
 
   host_init();
   boost::thread t_host_routine(&host_routine);
-  
+  boost::thread t_dram_simulator(&dram_simulator);    
   boost::thread t_host_dma_simulator0(&host_dma_simulator0);
   boost::thread t_host_dma_simulator1(&host_dma_simulator1);
   
@@ -611,6 +945,7 @@ int main() {
   boost::thread t_hashtable_get_comparator(&hashtable_get_comparator);
   boost::thread t_hashtable_get_line_fetcher(&hashtable_get_line_fetcher);
   boost::thread t_hashtable_get_offline_handler(&hashtable_get_offline_handler);
+  boost::thread t_hashtable_get_array_req_generator(&hashtable_get_array_req_generator);
   boost::thread t_hashtable_get_res_merger(&hashtable_get_res_merger);
 
   boost::thread t_hashtable_del_comparator(&hashtable_del_comparator);
@@ -622,11 +957,29 @@ int main() {
   boost::thread t_hashtable_put_offline_handler(&hashtable_put_offline_handler);
   boost::thread t_hashtable_put_line_fetcher(&hashtable_put_line_fetcher);
   boost::thread t_hashtable_put_newline_handler(&hashtable_put_newline_handler);
-
   boost::thread t_hashtable_put_comparator_pipeline_one(&hashtable_put_comparator_pipeline_one);
   boost::thread t_hashtable_put_comparator_pipeline_two(&hashtable_put_comparator_pipeline_two);
 
+  boost::thread t_hashtable_add_comparator(hashtable_add_comparator);
+  boost::thread t_hashtable_add_line_fetcher(hashtable_add_line_fetcher);
+  boost::thread t_hashtable_add_array_req_generator(hashtable_add_array_req_generator);
+  boost::thread t_hashtable_add_offline_handler(hashtable_add_offline_handler);
+  boost::thread t_hashtable_add_adder(hashtable_add_adder);
+  boost::thread t_hashtable_add_res_merger(hashtable_add_res_merger);
+  boost::thread t_hashtable_add_dma_wr_req_merger(hashtable_add_dma_wr_req_merger);
+
   boost::thread t_hashtable_line_fetcher_dma_rd_handler(&hashtable_line_fetcher_dma_rd_handler);
+
+  boost::thread t_cache_cache_res_merger(&cache_cache_res_merger);
+  boost::thread t_cache_dram_line_comparator(&cache_dram_line_comparator);
+  boost::thread t_cache_dram_wr_req_splitter(&cache_dram_wr_req_splitter);
+  boost::thread t_cache_dma_rd_filter(&cache_dma_rd_filter);
+  boost::thread t_cache_dram_rd_mux(&cache_dram_rd_mux);
+  boost::thread t_cache_redirect_pcie_wr_req_formatter(&cache_redirect_pcie_wr_req_formatter);
+  boost::thread t_cache_dma_res_merger(&cache_dma_res_merger);
+  boost::thread t_cache_dram_rd_req_splitter(&cache_dram_rd_req_splitter);
+  boost::thread t_cache_dma_wr_filter(&cache_dma_wr_filter);
+  boost::thread t_cache_dram_writer(&cache_dram_writer);
   
   boost::thread t_test(&test);
   

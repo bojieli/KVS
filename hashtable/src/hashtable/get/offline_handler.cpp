@@ -40,7 +40,7 @@ hashtable_get_offline_handler() {
     
     ulong4 data = read_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res, &read_rd_res);
     
-    if (read_rd_res) {
+    if (read_rd_res) {      
       bool first_res = false;
       if (!inflight_rd_res_size) {
 	bool dummy;

@@ -16,6 +16,7 @@ hashtable_get_comparator() {
 
       ulong4 key = req.key;
       uchar line_in_uchar[64];
+      
       ulong tmp[8] =
 	{
 	  line.lo.x, line.lo.y, line.lo.z, line.lo.w,
@@ -245,7 +246,7 @@ hashtable_get_comparator() {
 	getOfflineType.net_meta = req.net_meta;
 	getOfflineType.is_array_first = req.is_array_first;
 	rd_req_compressed.address = rd_req.req.address;
-	rd_req_compressed.size = rd_req.req.size;
+	rd_req_compressed.size = rd_req.req.size;	
 	bool dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_req, rd_req_compressed);
 	assert(dummy);
 	dummy = write_channel_nb_altera(slab_fetcher_get_offline_dma_rd_res_size_with_net_meta, getOfflineType);

@@ -33,7 +33,7 @@ hashtable_put_comparator_pipeline_two() {
 
     val_put_comparator_interm_info = read_channel_nb_altera(put_comparator_interm_info, &read_put_comparator_interm_info);
     
-    if (read_put_comparator_interm_info) {
+    if (read_put_comparator_interm_info) {	
       req = val_put_comparator_interm_info.req;
       
       if (last_finished) {

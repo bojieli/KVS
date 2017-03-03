@@ -30,7 +30,7 @@ hashtable_get_res_merger() {
       }
     }
 
-    if (read_get_res) {
+    if (read_get_res) {      
       if (!has_inflight_res) {
 	has_inflight_res = true;
 	inflight_get_res_size_left = get_res.val_size;

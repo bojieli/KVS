@@ -10,6 +10,7 @@ mkdir bin;
 mkdir src;
 cd src;
 ln -sf ../$PRJ/src/chan .;
+ln -sf ../$PRJ/src/cache .;
 ln -sf ../$PRJ/src/dma .;
 ln -sf ../$PRJ/src/hashtable .;
 ln -sf ../$PRJ/src/pcie .;

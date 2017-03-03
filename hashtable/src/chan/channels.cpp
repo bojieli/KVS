@@ -11,17 +11,73 @@ decl_channel(DmaReadReqWithId, 128, slab_non_init_dma_rd_req_with_id);
 // slab/dma_rd_req_merger -> slab/dma_rd_handler
 decl_channel(DmaContext, 128, slab_dma_handler_rd_req_context);
 // hashtable/line_fetcher/line_fetcher_rd_handler -> dma/rd_manager
-decl_channel(DMA_ReadReq_Compressed, 128, line_fetcher_dma_rd_req);
-// dma/rd_manager -> dma/rd_mux
-decl_channel(ulong8, 256, dma_rd_req);
-// dma/rd_demux -> dma/rd_manager
+decl_channel(DMA_ReadReq_Extended, 128, line_fetcher_dma_rd_req);
+// FPGA -> on board ddr
+decl_channel(Mem_ReadReq, 256, mem_rd_req);
+// cache/dram_rd_req_splitter -> cache/dram_rd_mux
+decl_channel(Mem_ReadReq, 256, read_mem_rd_req);
+// cache/dram_writer -> cache/dram_rd_mux
+decl_channel(Mem_ReadReq, 256, write_mem_rd_req);
+// cache/dram_rd_mux -> cache/dram_rd_mux
+decl_channel(bool, 256, mem_rd_req_context);
+// dma/rd_mux -> dma/rd_demux
+decl_channel(RdMuxContext, 256, rd_mux_context);
+// on board ddr -> FPGA
+decl_channel(Mem_ReadRes, 256, mem_rd_res);
+// cache/dram_rd_mux -> cache/dram_line_comparator
+decl_channel(Mem_ReadRes, 256, read_mem_rd_res);
+// cache/dram_rd_mux -> cache/dram_rd_mux
+decl_channel(Mem_ReadRes, 256, write_mem_rd_res);
+// FPGA -> on board ddr
+decl_channel(Mem_WriteReq, 256, mem_wr_req);
+// cache/dram_writer -> cache/dram_writer
+decl_channel(DramWriterContext, 256, dram_writer_context);
+// cache/dram_rd_req_splitter -> cache/dram_line_comparator
+decl_channel(DramReadContext, 256, dram_rd_req_context);
+// dma/rd_manager -> cache/dma_rd_filter
+decl_channel(DMA_ReadReq_Extended, 256, dma_rd_req);
+// cache/dma_rd_filter -> dma/rd_mux
+decl_channel(ulong8, 256, pcie_rd_req);
+// cache/dma_rd_filter -> cache/dram_rd_req_splitter
+decl_channel(DMA_ReadReq_Extended, 256, cache_rd_req);
+// cache/dram_line_comparator -> dma/rd_mux
+decl_channel(DMA_ReadReq_Compressed, 256, redirect_rd_req);
+// cache/dram_writer -> cache/redirect_pcie_wr_req_formatter
+decl_channel(RedirectPcieWrReqRaw, 256, redirect_pcie_wr_req_raw);
+// cache/redirect_pcie_wr_req_formatter -> dma/wr_mux
+decl_channel(DMA_WriteReq, 256, redirect_pcie_wr_req);
+// ache/dma_res_merger -> dma/rd_manager
 #ifdef _CSIM
 decl_channel(ulong4, 4096, dma_rd_res);
 #else
 decl_channel(ulong4, 256, dma_rd_res);
 #endif
-// dma/wr_manager -> dma/wr_mux
+// dma/rd_demux -> cache/dma_res_merger
+#ifdef _CSIM
+decl_channel(ulong4, 4096, pcie_rd_res);
+#else
+decl_channel(ulong4, 256, pcie_rd_res);
+#endif
+// dma/wr_manager -> cache/dma_wr_distributor
 decl_channel(ulong8, 256, dma_wr_req);
+// cache/dma_wr_distributor -> dma/wr_mux
+decl_channel(ulong8, 256, pcie_wr_req);
+// cache/dma_wr_distributor -> cache/dram_wr_req_reformatter
+decl_channel(DMA_WriteReq, 256, cache_wr_req_raw);
+// cache/cache_res_merger -> cache/dram_writer
+decl_channel(Mem_WriteReq_Tmp, 256, swapin_cache_wr_req);
+// cache/dram_wr_req_reformatter -> cache/dram_writer
+decl_channel(Mem_WriteReq_Tmp, 256, cache_wr_req);
+// cache/dram_line_comparator -> cache/cache_res_merger
+decl_channel(ulong, 256, swapin_cache_line_addr);
+// cache/cache_res_merger -> cache/dma_res_merger
+decl_channel(CacheReadRes, 256, cache_rd_res);
+// cache/dram_line_comparator -> cache/cache_res_merger
+decl_channel(CacheReadHitRes, 256, cache_rd_hit_res);
+// dma/rd_demux -> cache/cache_res_merger
+decl_channel(CacheReadMissRes, 256, cache_rd_miss_res);
+// cache/dma_rd_filter -> cache/dma_res_merger
+decl_channel(DmaReadFilterContext, 256, dma_rd_filter_context);
 // fpga -> host
 decl_channel(ulong8, 256, dma1_rd_req);
 // host -> fpga
@@ -34,8 +90,6 @@ decl_channel(ulong8, 256, dma0_rd_req);
 decl_channel(ulong4, 256, dma0_rd_res);
 // fpga -> host
 decl_channel(ulong8, 256, dma0_wr_req);
-// dma/rd_mux -> dma/rd_demux
-decl_channel(ushort, 256, dma_rd_req_size);
 // slab/dma_wr_handler -> dma/wr_manager   
 decl_channel(DMA_WriteReq_Compressed, 512, slab_dma_wr_req);
 // slab/besides_return -> slab/dma_wr_handler
@@ -50,6 +104,20 @@ decl_channel(ulong4, 256, slab_dma_rd_res);
 #endif
 // slab/besides_return -> slab/dma_rd_handler
 decl_channel(ulong8, 1, init_slab_dma_rd_handler);
+// slab/besides_return -> cache/cache_res_merger
+decl_channel(ulong, 1, init_cache_res_merger);
+// slab/besides_return -> cache/dram_line_comparator
+decl_channel(ulong, 1, init_dram_line_comparator);
+// slab/besides_return -> cache/dram_writer
+decl_channel(ulong, 1, init_dram_writer);
+// slab/besides_return -> cache/dma_rd_filter
+decl_channel(ulong, 1, init_dma_rd_filter);
+// slab/besides_return -> cache/dram_wr_req_splitter
+decl_channel(ulong, 1, init_dram_wr_req_splitter);
+// slab/besides_return -> cache/dma_wr_filter
+decl_channel(ulong, 1, init_dma_wr_filter);
+// slab/besides_return -> cache/dram_rd_req_splitter
+decl_channel(ulong, 1, init_dram_rd_req_splitter);
 // pcie/rx -> slab/besides_return
 decl_channel(ulong8, 1, host_init_slab);
 // slab/dma_rd_handler -> slab/besides_return

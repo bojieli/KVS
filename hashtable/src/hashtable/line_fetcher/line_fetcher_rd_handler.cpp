@@ -6,7 +6,7 @@ hashtable_line_fetcher_dma_rd_handler() {
   ulong8 rd_res_in_ulong8;
   bool state = false;
   
-  while (1) {    // issue request
+  while (1) {
     bool should_write_line_fetcher_add_dma_rd_res = false;
     bool should_write_line_fetcher_put_dma_rd_res = false;
     bool should_write_line_fetcher_get_dma_rd_res = false;
@@ -17,6 +17,7 @@ hashtable_line_fetcher_dma_rd_handler() {
     ulong8 val_write_line_fetcher_get_dma_rd_res;
     ulong8 val_write_line_fetcher_del_dma_rd_res;
     
+    DMA_ReadReq_Extended rd_req_extended;
     DMA_ReadReq_Compressed rd_req_compressed;
     bool read_rd_req;
     DmaContext context;
@@ -24,24 +25,28 @@ hashtable_line_fetcher_dma_rd_handler() {
     if (read_rd_req) {
       context.id = 0;
       context.size = rd_req_compressed.size;
+      rd_req_extended.should_swapin = true;
     }
     else {
       rd_req_compressed = read_channel_nb_altera(line_fetcher_del_dma_rd_req, &read_rd_req);
       if (read_rd_req) {
 	context.id = 1;
 	context.size = rd_req_compressed.size;
+	rd_req_extended.should_swapin = false;
       }
       else {
 	rd_req_compressed = read_channel_nb_altera(line_fetcher_put_dma_rd_req, &read_rd_req);
 	if (read_rd_req) {
 	  context.id = 2;
 	  context.size = rd_req_compressed.size;
+	  rd_req_extended.should_swapin = false;
 	}
 	else {
 	  rd_req_compressed = read_channel_nb_altera(line_fetcher_add_dma_rd_req, &read_rd_req);
 	  if (read_rd_req) {
 	    context.id = 3;
 	    context.size = rd_req_compressed.size;
+	    rd_req_extended.should_swapin = false;
 	  }
 	  else {
 	    // ...
@@ -51,7 +56,9 @@ hashtable_line_fetcher_dma_rd_handler() {
     }
 
     if (read_rd_req) {
-      write_channel_altera(line_fetcher_dma_rd_req, rd_req_compressed);
+      rd_req_extended.address = rd_req_compressed.address;
+      rd_req_extended.size = rd_req_compressed.size;
+      write_channel_altera(line_fetcher_dma_rd_req, rd_req_extended);
       bool dummy = write_channel_nb_altera(line_fetcher_dma_rd_handler_context, context);
       assert(dummy);
     }
@@ -132,7 +139,7 @@ hashtable_line_fetcher_dma_rd_handler() {
     }
 
     if (should_write_line_fetcher_get_dma_rd_res) {
-      bool dummy = write_channel_nb_altera(line_fetcher_get_dma_rd_res, val_write_line_fetcher_get_dma_rd_res);
+      bool dummy = write_channel_nb_altera(line_fetcher_get_dma_rd_res, val_write_line_fetcher_get_dma_rd_res);      
       assert(dummy);
     }
 

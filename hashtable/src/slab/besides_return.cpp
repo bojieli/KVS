@@ -56,6 +56,20 @@ slab_besides_return() {
   assert(dummy);
   dummy = write_channel_nb_altera(init_slab_return, slab_start_addr);
   assert(dummy);
+  dummy = write_channel_nb_altera(init_cache_res_merger, slab_start_addr);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_dram_line_comparator, slab_start_addr);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_dram_writer, slab_start_addr);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_dma_rd_filter, slab_start_addr);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_dram_wr_req_splitter, slab_start_addr);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_dma_wr_filter, slab_start_addr);
+  assert(dummy);
+  dummy = write_channel_nb_altera(init_dram_rd_req_splitter, slab_start_addr);
+  assert(dummy);
 
   ulong2 tmp;  
   tmp.x = slab_start_addr;

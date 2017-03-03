@@ -23,6 +23,10 @@
 #include "../inc/dmawritereq.h"
 #include "../inc/dmareadreq.h"
 #include "../inc/dmareadres.h"
+#include "../inc/memreadreq.h"
+#include "../inc/memreadres.h"
+#include "../inc/memwritereq.h"
+#include "../inc/cachefunc.h"
 #include "../inc/constant.hpp"
 #include "../inc/datatype.hpp"
 #include "../inc/hashfunc.hpp"
@@ -88,6 +92,19 @@
 #include "hashtable/add/adder.cpp"
 #include "hashtable/add/res_merger.cpp"
 #include "hashtable/add/dma_wr_req_merger.cpp"
+/**********************************/
+
+/**********************************/
+#include "cache/cache_res_merger.cpp"
+#include "cache/dram_line_comparator.cpp"
+#include "cache/dram_writer.cpp"
+#include "cache/dma_rd_filter.cpp"
+#include "cache/dram_wr_req_splitter.cpp"
+#include "cache/dma_res_merger.cpp"
+#include "cache/dram_rd_mux.cpp"
+#include "cache/redirect_pcie_wr_req_formatter.cpp"
+#include "cache/dma_wr_filter.cpp"
+#include "cache/dram_rd_req_splitter.cpp"
 /**********************************/
 
 /**********************************/

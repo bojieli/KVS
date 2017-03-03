@@ -24,3 +24,10 @@ typedef struct __attribute__((packed)) DMA_ReadReq_Compressed {
   ulong address;
   uint size;
 }DMA_ReadReq_Compressed;
+
+
+typedef struct __attribute__((packed)) DMA_ReadReq_Extended {
+  ulong address;
+  uint size;
+  bool should_swapin;
+}DMA_ReadReq_Extended;

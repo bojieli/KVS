@@ -160,3 +160,50 @@ typedef struct PutComparatorIntermInfo {
   PutReq req;
   bool line_updated;
 }PutComparatorIntermInfo;
+
+typedef struct DmaReadFilterContext {
+  bool is_cached;
+  ushort size;
+}DmaReadFilterContext;
+
+typedef struct DramReadContext {
+  ulong address;
+  bool is_32B;
+  bool should_swapin;
+}DramReadContext;
+
+typedef struct CacheReadHitRes {
+  ulong8 data;
+  bool is_32B;
+  bool is_first_half;
+  bool is_miss;
+}CacheReadHitRes;
+
+typedef struct CacheReadMissRes {
+  ulong8 data;
+  bool is_32B;
+  bool is_first_half;
+}CacheReadMissRes;
+
+typedef struct CacheReadRes {
+  ulong8 data;
+  bool is_32B;
+  bool is_first_half;
+}CacheReadRes;
+   
+typedef struct DramWriterContext {
+  Mem_WriteReq_Tmp wr_req;
+  bool is_swapin;
+}DramWriterContext;
+
+typedef struct RdMuxContext {
+  ushort size;
+  uchar id;
+}RdMuxContext;
+
+typedef struct RedirectPcieWrReqRaw {
+  ulong address;
+  ulong8 data;
+  bool is_first_half;
+  bool is_32B;
+}RedirectPcieWrReq;
